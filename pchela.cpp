@@ -45,7 +45,7 @@ float color1IsColor2(CvScalar color1, CvScalar color2)
     b2 = color2.val[0];
     return (r1*r2 + g1*g2 + b1*b2)/sqrt(r1*r1 + g1*g1 + b1*b1)/sqrt(r2*r2 + g2*g2 + b2*b2);
 }
-IplImage* sameColor(IplImage* src, IplImage* dst, int numColor = 0, double k1 = 0.95)
+IplImage* sameColor(IplImage* src, IplImage* dst, int numColor = 0, double k1 = 0.995)
 {
     CvScalar color=getColor(numColor);
     for(int x = 0; x < src->width; x++)
@@ -55,7 +55,6 @@ IplImage* sameColor(IplImage* src, IplImage* dst, int numColor = 0, double k1 = 
             float similar = color1IsColor2(CV_RGB(PointVal(src, x, y, 1), PointVal(src, x, y, 2), PointVal(src, x, y, 3)), color);
             //float light1 = ((int)color.val[2]+color.val[1]+color.val[0])/3.0;
             //float light2 = ((int)PointVal(src, x, y, 1) + PointVal(src, x, y, 2) + PointVal(src, x, y, 3))/3.0;
-
             /*int vr = color.val[2] - PointVal(src, x, y, 1);
             int vg = color.val[1] - PointVal(src, x, y, 2);
             int vb = color.val[0] - PointVal(src, x, y, 3);
@@ -64,8 +63,14 @@ IplImage* sameColor(IplImage* src, IplImage* dst, int numColor = 0, double k1 = 
 
             if(similar > k1)
             {
-                PointVal(dst, x, y, 3) = 255;//0;
+                //if(numColor == 0&&y>src->height/2)
+                //    cout<<color.val[0]<<'-'<<(int)PointVal(src, x, y, 1)<<' '<<color.val[1]<<'-'<<(int)PointVal(src, x, y, 2)<<' '<<color.val[2]<<'-'<<(int)PointVal(src, x, y, 3)<<' '<<similar<<endl;
+
+                //PointVal(dst, x, y, 3) = PointVal(src, x, y, 3);//0;
+                //PointVal(dst, x, y, 2) = PointVal(src, x, y, 2);//0;
+                //PointVal(dst, x, y, 1) = PointVal(src, x, y, 1);//0;
                 PointVal(dst, x, y, 2) = 255;//PointVal(src, x, y, 1);
+                PointVal(dst, x, y, 3) = 255;//PointVal(src, x, y, 1);
                 PointVal(dst, x, y, 1) = 255;//(255 * 6 + PointVal(src, x, y, 1) * 4) / 10;
             }
             else
@@ -78,6 +83,19 @@ IplImage* sameColor(IplImage* src, IplImage* dst, int numColor = 0, double k1 = 
     }
     return dst;
 }
+struct Robot
+{
+    CvPoint left_point,right_point,center;
+    double ang, radius;
+    void calculate(CvPoint l, CvPoint r)
+    {
+        left_point=l;
+        right_point=r;
+        center=cvPoint((l.x+r.x)/2,(l.y+r.y)/2);
+        radius=_hypot(r.x-l.x,r.y-l.y);
+        ang=atan2(r.x-l.x,r.y-l.y);
+    }
+};
 struct Comp
 {
     int size;
@@ -109,7 +127,7 @@ struct Comps
         {
             for (int n = 0; n < sH; n++)
             {
-                if ((unsigned char)PointVal(image,i,n,0)==255 && windowArray[i][n] == -1)
+                if ((unsigned char)PointVal(image,i,n,1)==255 && windowArray[i][n] == -1)
                 {
                     static long long sum,sumX,sumY;
                     sum = 1;
@@ -138,7 +156,7 @@ struct Comps
                             CvPoint t = cvPoint (p.x + dx, p.y + dy);
                             if ((dx == 0 && dy == 0) || t.x < 0 || t.y < 0 || t.x >= sW || t.y >= sH)
                                 continue;
-                            if((unsigned char)PointVal(image,t.x,t.y,0)!=255 || windowArray[t.x][t.y] != -1)
+                            if((unsigned char)PointVal(image,t.x,t.y,1)!=255 || windowArray[t.x][t.y] != -1)
                                 continue;
                             dp++;
                             q.push(t);
@@ -167,7 +185,7 @@ struct Comps
 };
 int main()
 {
-
+    Robot robot;
     cout<<"W8 ";
     IplImage*  frame   = NULL;
     char c=0;
@@ -184,12 +202,11 @@ int main()
         const int scale=2.5;
         static IplImage* image = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
         static IplImage* grey = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
-        static IplImage* yellow = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
-        static IplImage* orange = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
-        static IplImage* red = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
-        static IplImage* green = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
-        static IplImage* blue = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
-        static IplImage* black = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
+        static IplImage* yellow = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+        static IplImage* orange = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+        static IplImage* red = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+        static IplImage* green = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+        static IplImage* blue = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
         static IplImage* text1 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
         static IplImage* text2 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
         static IplImage* text3 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
@@ -210,22 +227,22 @@ int main()
                 PointVal(grey,i,j,0)=min(PointVal(image,i,j,1),min(PointVal(image,i,j,2),PointVal(image,i,j,3)));
 
         cvThreshold(grey,grey,115,255,CV_THRESH_BINARY);
-        cvThreshold(text2,text2,50,255,CV_THRESH_BINARY_INV);
+        cvThreshold(text2,text2,80,255,CV_THRESH_BINARY_INV);
 
         Comps comps_board(grey);
         for(int i=0;i<text2->width;i++)
         {
             for(int j=0;j<text2->height&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j++)
-                PointVal(text2,i,j,0)=255;
+                PointVal(text2,i,j,1)=255;
             for(int j=text2->height-1;j>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j--)
-                PointVal(text2,i,j,0)=255;
+                PointVal(text2,i,j,1)=255;
         }
         for(int j=0;j<text2->height;j++)
         {
             for(int i=0;i<text2->width&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i++)
-                PointVal(text2,i,j,0)=255;
+                PointVal(text2,i,j,1)=255;
             for(int i=text2->width-1;i>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i--)
-                PointVal(text2,i,j,0)=255;
+                PointVal(text2,i,j,1)=255;
         }
         sameColor(image,red,2);
         sameColor(image,green,3);
@@ -245,7 +262,7 @@ int main()
                             continue;
                         double r=color1IsColor2(CV_RGB(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2), PointVal(image, p.x, p.y, 3)), getColor(2)),
                         g=color1IsColor2(CV_RGB(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2), PointVal(image, p.x, p.y, 3)), getColor(3))
-                        ;//cout<<r<<' '<<g<<' '<<k<<endl;
+                        ,k=min(min(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2)), PointVal(image, p.x, p.y, 3));//cout<<r<<' '<<g<<' '<<k<<endl;
                         if(r>g&&r>pow)
                         {
                             pow=r;
@@ -267,7 +284,7 @@ int main()
                         //if(pow>0.98)
                             break;
                     case 2:
-                        cvCircle(text3,p,0,CV_RGB(0,0,255));
+                        cvCircle(text3,p,0,CV_RGB(255,255,255));
                         //if(pow>0.98)
                             break;
                     default:
@@ -277,9 +294,12 @@ int main()
                 else
                     cvCircle(text3,p,0,CV_RGB(255,255,255));
             }
-
+        robot.calculate(comps_y.maxComp.center,comps_o.maxComp.center);
+        //cout<<robot.center.x<<' '<<robot.center.y<<endl;
+        cvCircle(text3,robot.center,robot.radius,CV_RGB(255,255,255),CV_FILLED);
         cvShowImage("text",text3);
-        cvShowImage("laplace",text1);
+        cvShowImage("yellow",yellow);
+        cvShowImage("orange",orange);
         cvShowImage("frame",frame);
         //system("cls");
         cvWaitKey(1);
