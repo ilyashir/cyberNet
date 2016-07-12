@@ -178,6 +178,7 @@ int main()
     while(c != ' ')
     {
         frame = cvQueryFrame(capture);
+        //cvLaplace(frame,frame);
 
         if(is_selecting)
         {
