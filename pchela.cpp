@@ -36,7 +36,7 @@ CvScalar getColor(int num)
 using namespace std;
 float color1IsColor2(CvScalar color1, CvScalar color2)
 {
-    static float r1,g1,b1,r2,b2,g2;
+    static double r1,g1,b1,r2,b2,g2;
     r1 = color1.val[2];
     g1 = color1.val[1];
     b1 = color1.val[0];
@@ -169,13 +169,11 @@ int main()
 {
 
     cout<<"W8 ";
-    //capture = cvCreateCameraCapture(0);
     IplImage*  frame   = NULL;
     char c=0;
-    CvCapture* capture = cvCreateCameraCapture(1);//cvCaptureFromFile("http://10.23.46.250:8080/?action=streaming.mjpg");
+    CvCapture* capture = cvCreateCameraCapture(1);
     while(c != 13)
     {
-        //cout<<'.';
         float fps=31;
         while(fps>30)
         {
@@ -183,7 +181,7 @@ int main()
             frame = cvQueryFrame(capture);
             fps=1000.0/(clock()-time);
         }
-        const int scale=1;
+        const int scale=2.5;
         static IplImage* image = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
         static IplImage* grey = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
         static IplImage* yellow = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
@@ -206,10 +204,10 @@ int main()
                 PointVal(text2,i,j,1)=0;
         for(int i=0;i<text1->width;i++)
             for(int j=0;j<text1->height;j++)
-                PointVal(text2,i,j,1)=max(PointVal(text1,i,j,1),max(PointVal(text1,i,j,1),PointVal(text1,i,j,1)));
+                PointVal(text2,i,j,1)=max(PointVal(text1,i,j,1),max(PointVal(text1,i,j,2),PointVal(text1,i,j,3)));
         for(int i=0;i<image->width;i++)
             for(int j=0;j<image->height;j++)
-                PointVal(grey,i,j,0)=min(PointVal(image,i,j,1),min(PointVal(image,i,j,1),PointVal(image,i,j,1)));
+                PointVal(grey,i,j,0)=min(PointVal(image,i,j,1),min(PointVal(image,i,j,2),PointVal(image,i,j,3)));
 
         cvThreshold(grey,grey,115,255,CV_THRESH_BINARY);
         cvThreshold(text2,text2,50,255,CV_THRESH_BINARY_INV);
@@ -239,28 +237,23 @@ int main()
                 if(PointVal(text2,x,y,1)==0)
                 {
                     float pow=0;int ind=3;
-                    for(int i=-3;i<=3;i++)
-                        for(int j=-3;j<=3;j++)
+                    for(int i=0;i<=0;i++)
+                        for(int j=0;j<=0;j++)
                     {
                         CvPoint p=cvPoint(x+i,y+j);
                         if(p.x<0||p.x>=image->width||p.y<0||p.y>=image->height)
                             continue;
                         double r=color1IsColor2(CV_RGB(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2), PointVal(image, p.x, p.y, 3)), getColor(2)),
-                        g=color1IsColor2(CV_RGB(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2), PointVal(image, p.x, p.y, 3)), getColor(3)),
-                        b=color1IsColor2(CV_RGB(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2), PointVal(image, p.x, p.y, 3)), getColor(4));
-                        if(r>max(g,b)&&r>pow)
+                        g=color1IsColor2(CV_RGB(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2), PointVal(image, p.x, p.y, 3)), getColor(3))
+                        ;//cout<<r<<' '<<g<<' '<<k<<endl;
+                        if(r>g&&r>pow)
                         {
                             pow=r;
                             ind=0;
                         }
-                        else if(g>b&&g>pow){
+                        else if(g>pow){
                             pow=g;
                             ind=1;
-                        }
-                        else if(b>pow)
-                        {
-                            pow=b;
-                            ind=2;
                         }
                     }
                     switch(ind)
@@ -275,8 +268,10 @@ int main()
                             break;
                     case 2:
                         cvCircle(text3,p,0,CV_RGB(0,0,255));
+                        //if(pow>0.98)
+                            break;
                     default:
-                        cvCircle(text3,p,0,CV_RGB(0,0,255));
+                        cvCircle(text3,p,0,CV_RGB(0,0,0));
                     }
                 }
                 else
@@ -284,8 +279,9 @@ int main()
             }
 
         cvShowImage("text",text3);
+        cvShowImage("laplace",text1);
         cvShowImage("frame",frame);
-        system("cls");
+        //system("cls");
         cvWaitKey(1);
 
     }
