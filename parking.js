@@ -1,22 +1,48 @@
 var pi = 3.1415926535897931;
 var length = 0;
 var out = 0;
-
+var x=0;
+var y=-1;
+var que = true;
 var main = function()
-{
-	stay3();
+{
+	Struc(0, 700, 200, 1);
 	return;
+}
+var request = function(){
+	script.sendMessage(13);
+	while (!gamepad.isConnected())
+		script.wait(10);
+	while (true) {
+		if (gamepad.isPadPressed(0)) {
+			x = gamepad.padX(0);
+			y = gamepad.padX(0);
+			brick.display().addLabel(x, 0, 0);
+			brick.display().addLabel(y, 0, 15);
+			brick.display().redraw();
+			break;
+		}
+		script.wait(100);
+	}
+	switch(x){
+		case 1: stay1(); break;
+		case 2: stay2(); break;
+		case 3: stay3(); break;
+		case 4: stay4(); break;
+		case 5: stay5(); break;
+		case 6: stay6(); break;
+	}
 }
 var end = function(){
 	brick.motor('S1').setPower(0);
 	brick.motor('S2').setPower(0);
 	script.wait(1000);
 }
-var fullSetPower = function(x){
-	brick.motor('M1').setPower(x);
-	brick.motor('M2').setPower(x);
-	brick.motor('M3').setPower(x);
-	brick.motor('M4').setPower(x);
+var fullSetPower = function(z){
+	brick.motor('M1').setPower(z);
+	brick.motor('M2').setPower(z);
+	brick.motor('M3').setPower(z);
+	brick.motor('M4').setPower(z);
 }
 var EnReset = function(){
 	brick.encoder("E1").reset();
@@ -24,9 +50,9 @@ var EnReset = function(){
 	brick.encoder("E3").reset();
 	brick.encoder("E4").reset();
 }
-var Struc = function(power, ms, len, y){
-	brick.motor('S1').setPower(power);
-	brick.motor('S2').setPower(power);
+var Struc = function(angle, ms, len, y){
+	brick.motor('S1').setPower(angle);
+	brick.motor('S2').setPower(angle);
 	script.wait(ms);
 	length = len;
 	y==1?go():back();
@@ -38,8 +64,17 @@ var go = function()
 	out = 360*length/80*2.5;
 	for (i=0; i <= out; i=i+1-1)
 	{
-		i = (Math.abs(brick.encoder("E1").read() + brick.encoder("E2").read()))/2;
-		fullSetPower(100);
+		i = (Math.abs(brick.encoder("E1").read() + brick.encoder("E2").read()))/2;
+		if(brick.sensor("A1").read()<10){
+			fullSetPower(0);
+			if(que=true){
+				que=false;
+				request();
+				break;
+			}
+		}
+		else
+			fullSetPower(100);
 	}
 	script.wait (100);
 	fullSetPower(0);
