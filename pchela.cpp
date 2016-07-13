@@ -208,10 +208,31 @@ void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps
     static IplImage* text2 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
     static IplImage* text3 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
     cvResize(frame,image);
-    //Ищем желтую и оранжевую метки
-    comps_y = Comps(sameColor(image,yellow));
-    comps_o = Comps(sameColor(image,orange,1));
-    cvResize(frame, text1);
+
+    //Делаем контрастное чб изображение
+    for(int i=0;i<image->width;i++)
+        for(int j=0;j<image->height;j++)
+            PointVal(grey,i,j,0)=min(PointVal(image,i,j,1),min(PointVal(image,i,j,2),PointVal(image,i,j,3)));
+    //Бинаризуем контрастные изображения
+    cvThreshold(grey,grey,115,255,CV_THRESH_BINARY);
+    //Определяем доску компонентой
+    comps_board = Comps(grey);
+    //Убираем все, что этой компоненте не принадлежит
+    for(int i=0;i<image->width;i++)
+    {
+        for(int j=0;j<image->height&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j++)
+            PointVal(image,i,j,1)=255;
+        for(int j=image->height-1;j>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j--)
+            PointVal(image,i,j,1)=255;
+    }
+    for(int j=0;j<image->height;j++)
+    {
+        for(int i=0;i<image->width&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i++)
+            PointVal(image,i,j,1)=255;
+        for(int i=image->width-1;i>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i--)
+            PointVal(image,i,j,1)=255;
+    }
+    cvCopy(image, text1);
     //Алгоритмом Лапласа ищем контрастные участки
     cvLaplace(text1,text1);
     for(int i=0;i<text2->width;i++)
@@ -221,30 +242,11 @@ void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps
     for(int i=0;i<text1->width;i++)
         for(int j=0;j<text1->height;j++)
             PointVal(text2,i,j,1)=max(PointVal(text1,i,j,1),max(PointVal(text1,i,j,2),PointVal(text1,i,j,3)));
-    //Делаем контрастное чб изображение
-    for(int i=0;i<image->width;i++)
-        for(int j=0;j<image->height;j++)
-            PointVal(grey,i,j,0)=min(PointVal(image,i,j,1),min(PointVal(image,i,j,2),PointVal(image,i,j,3)));
-    //Бинаризуем контрастные изображения
-    cvThreshold(grey,grey,115,255,CV_THRESH_BINARY);
-    cvThreshold(text2,text2,80,255,CV_THRESH_BINARY_INV);
-    //Определяем доску компонентой
-    comps_board = Comps(grey);
-    //Убираем все, что этой компоненте не принадлежит
-    for(int i=0;i<text2->width;i++)
-    {
-        for(int j=0;j<text2->height&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j++)
-            PointVal(text2,i,j,1)=255;
-        for(int j=text2->height-1;j>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j--)
-            PointVal(text2,i,j,1)=255;
-    }
-    for(int j=0;j<text2->height;j++)
-    {
-        for(int i=0;i<text2->width&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i++)
-            PointVal(text2,i,j,1)=255;
-        for(int i=text2->width-1;i>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i--)
-            PointVal(text2,i,j,1)=255;
-    }
+    cvThreshold(text2,text2,50,255,CV_THRESH_BINARY_INV);
+
+    //Ищем желтую и оранжевую метки
+    comps_y = Comps(sameColor(image,yellow));
+    comps_o = Comps(sameColor(image,orange,1));
     //Разделяем на зеленый - не зеленый
     for(int x=0;x<image->width;x++)
         for(int y=0;y<image->height;y++)
@@ -259,17 +261,19 @@ void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps
                     CvPoint p=cvPoint(x+i,y+j);
                     if(p.x<0||p.x>=image->width||p.y<0||p.y>=image->height)
                         continue;
-                    double r=color1IsColor2(CV_RGB(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2), PointVal(image, p.x, p.y, 3)), getColor(2)),
-                    g=color1IsColor2(CV_RGB(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2), PointVal(image, p.x, p.y, 3)), getColor(3))
-                    ,k=min(min(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2)), PointVal(image, p.x, p.y, 3));//cout<<r<<' '<<g<<' '<<k<<endl;
-                    if(r>g&&r>pow)
+                    double
+                    r=PointVal(image, p.x, p.y, 1),
+                    g=PointVal(image, p.x, p.y, 2),
+                    b=PointVal(image, p.x, p.y, 3),
+                    k=min(min(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2)), PointVal(image, p.x, p.y, 3));//cout<<r<<' '<<g<<' '<<k<<endl;
+                    if(r==k)
                     {
-                        pow=r;
-                        ind=0;
-                    }
-                    else if(g>pow){
                         pow=g;
                         ind=1;
+                    }
+                    else{
+                        pow=r;
+                        ind=0;
                     }
                 }
                 switch(ind)
@@ -322,16 +326,16 @@ int main()
     cout<<"W8 ";
     IplImage*  frame   = NULL;
     char c=0;
-    CvCapture* capture = cvCreateCameraCapture(1);
+    CvCapture* capture = cvCreateCameraCapture(0);
     while(c != 13)
     {
         float fps=31;
-        while(fps>30)
+        /*while(fps>30)
         {
             int time=clock();
             frame = cvQueryFrame(capture);
             fps=1000.0/(clock()-time);
-        }
+        }*/
         static IplImage* text4 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
         cvShowImage("frame",frame);
         ProcessBoard(frame,text4,comps_o,comps_y,comps_board,robot);
