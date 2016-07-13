@@ -10,6 +10,7 @@
 #include <string>
 #include <ctime>
 #include <windows.h>
+#include "SendToTrik.h"
 using namespace std;
 #define PointVal(image, x, y, channel) (*getCvPixelPtr(image, x, y, channel))
 
@@ -185,6 +186,7 @@ struct Comps
 };
 int main()
 {
+    Trik trik1("10.23.46.128");
     Robot robot;
     cout<<"W8 ";
     IplImage*  frame   = NULL;

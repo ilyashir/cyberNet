@@ -5,14 +5,11 @@
 #include<string>
 using namespace std;
 #define PortOut 4444
-SOCKET s;
-/*
-//Класс передачи данных на Трик
-*/
-class Trik
+struct Trik
 {
-public:
-    //Конструктор класса
+    //Конструктор
+    SOCKET s;
+
     Trik(string s_IP)
     {
         start();
@@ -21,6 +18,7 @@ public:
         addr.sin_addr.s_addr = inet_addr(s_IP.c_str());
         connect(s,(SOCKADDR *) & addr, sizeof (addr));
     }
+    //Деструктор
     ~Trik()
     {
         finish();
@@ -77,24 +75,10 @@ public:
         closesocket(s);
         WSACleanup();
     }
-
+    //Значения
     string vals[4];
-private:
     //Адрес
     sockaddr_in addr;
     //Строки
     string pad0,pad1;
 };
-int main()
-{
-    string ip="10.23.46.128";
-    Trik trik1(ip);
-    while(true)
-    {
-        string a,b,c,d;
-        cin>>a>>b>>c>>d;
-        trik1.set_str(4,a,b,c,d);
-        trik1.send();
-    }
-    return 0;
-}
