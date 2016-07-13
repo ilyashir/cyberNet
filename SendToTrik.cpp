@@ -6,123 +6,95 @@
 using namespace std;
 #define PortOut 4444
 SOCKET s;
-
 /*
-//Класс передачи данных на Трику
+//Класс передачи данных на Трик
 */
 class Trik
 {
 public:
     //Конструктор класса
-    Trik(char* IP);
-    //Отправить строку
-    void send(string data,int lenthOfData);
-    //Отправить строку pad0 или pad1
-    void send(int pad);
-    //Отправить обе строки
-    void send();
-    //Создать строку для двух параметров на геймпад
-    void strGen(int padNum,string x,string y);
+    Trik(string s_IP)
+    {
+        start();
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(PortOut);
+        addr.sin_addr.s_addr = inet_addr(s_IP.c_str());
+        connect(s,(SOCKADDR *) & addr, sizeof (addr));
+    }
+    ~Trik()
+    {
+        finish();
+    }
     //Создать строки для двух геймпадов
-    void strGen(string a,string b,string c,string d);
-    //пятый параметр
-    void strGen(string a,string b,string c,string d,string e);
+    void strGen()
+    {
+        pad0="pad 0 "+vals[0]+" "+vals[1]+"\n";
+        pad1="pad 1 "+vals[2]+" "+vals[3]+"\n";
+    }
+    //Отправить обе строки
+    void send()
+    {
+        strGen();
+        sendto(s,&pad0[0],pad0.size(),0,(SOCKADDR *) & addr, sizeof (addr));
+        sendto(s,&pad1[0],pad1.size(),0,(SOCKADDR *) & addr, sizeof (addr));
+    }
+    //Записать строки в произвольном порядке
+    void set_str(string s1, int v1, string s2="", int v2=-1, string s3="", int v3=-1, string s4="", int v4=-1)
+    {
+        vals[v1]=s1;
+        if(v2!=-1)
+            vals[v2]=s2;
+        if(v3!=-1)
+            vals[v3]=s3;
+        if(v4!=-1)
+            vals[v4]=s4;
+    }
+    //Записать строки последовательно
+    void set_str(int n, string s1, string s2="", string s3="", string s4="")
+    {
+        switch(n)
+        {
+        case 4:
+            vals[3]=s4;
+        case 3:
+            vals[2]=s3;
+        case 2:
+            vals[1]=s2;
+        case 1:
+            vals[0]=s1;
+        }
+    }
+    //Запуск связи
+    void start()
+    {
+        WSADATA wsaData;
+        WSAStartup(MAKEWORD(2, 2), &wsaData);
+        s=socket(AF_INET,SOCK_STREAM,0);
+    }
+    //Завершение работы
+    void finish()
+    {
+        closesocket(s);
+        WSACleanup();
+    }
+
+    string vals[4];
 private:
     //Адрес
     sockaddr_in addr;
     //Строки
     string pad0,pad1;
 };
-//Конструктор класса
-Trik::Trik(char* IP)
-{
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(PortOut);
-    addr.sin_addr.s_addr = inet_addr(IP);
-    connect(s,(SOCKADDR *) & addr, sizeof (addr));
-}
-//Отправить строку
-void Trik::send(string data,int lenthOfData)
-{
-    sendto(s,&data[0],lenthOfData,0,(SOCKADDR *) & addr, sizeof (addr));
-}
-//Отправить строку pad0 или pad1
-void Trik::send(int pad)
-{
-    if(pad==0)
-    {
-        sendto(s,&pad0[0],pad0.size(),0,(SOCKADDR *) & addr, sizeof (addr));
-    }
-    else
-    {
-        sendto(s,&pad1[0],pad1.size(),0,(SOCKADDR *) & addr, sizeof (addr));
-    }
-}
-//Отправить обе строки
-void Trik::send()
-{
-    sendto(s,&pad0[0],pad0.size(),0,(SOCKADDR *) & addr, sizeof (addr));
-    sendto(s,&pad1[0],pad1.size(),0,(SOCKADDR *) & addr, sizeof (addr));
-}
-//Создать строку для двух параметров
-void Trik::strGen(int padNum,string x,string y)
-{
-    if(padNum==0)
-    {
-        pad0="pad 0 "+x+" "+y+"\n";
-        cout<<pad0<<endl;
-    }
-    else
-    {
-        pad1="pad 1 "+x+" "+y+"\n";
-        cout<<pad1<<endl;
-    }
-}
-//Создать строки для двух геймпадов
-void Trik::strGen(string a,string b,string c,string d)
-{
-    pad0="pad 0 "+a+" "+b+"\n";
-    pad1="pad 1 "+c+" "+d+"\n";
-}
-void Trik::strGen(string a,string b,string c,string d,string e)
-{
-    cout<<strlen(&e[0])<<endl;
-    switch (strlen(&e[0]))
-    {
-    case 1:
-        e="00"+e;
-        break;
-    case 2:
-        e="0"+e;
-        break;
-    }
-    pad0="pad 0 "+a+e+" "+b+"\n";
-    pad1="pad 1 "+c+" "+d+"\n";
-}
-//Запуск связи
-void start()
-{
-    WSADATA wsaData;
-    WSAStartup(MAKEWORD(2, 2), &wsaData);
-    s=socket(AF_INET,SOCK_STREAM,0);
-}
-//Завершение работы
-void finish()
-{
-    closesocket(s);
-    WSACleanup();
-}
 int main()
 {
-    start();
-    Trik trik1("10.23.46.128");
+    string ip="10.23.46.128";
+    Trik trik1(ip);
     while(true)
     {
-        string a,b,c,d,e;
-        cin>>a>>b>>c>>d>>e;
-        trik1.strGen(a,b,c,d,e);
+        string a,b,c,d;
+        cin>>a>>b>>c>>d;
+        trik1.set_str(4,a,b,c,d);
         trik1.send();
     }
-    finish();
     return 0;
 }
