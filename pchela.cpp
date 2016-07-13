@@ -186,15 +186,8 @@ struct Comps
 };
 int main()
 {
-    Trik trik1("192.168.77.1");
-    while(true)
-    {
-        string a,b,c,d;
-        cin>>a>>b>>c>>d;
-        trik1.set_str(4,a,b,c,d);
-        trik1.send();
-    }
-    /*Robot robot;
+    //Trik trik1("192.168.77.1");
+    Robot robot;
     cout<<"W8 ";
     IplImage*  frame   = NULL;
     char c=0;
@@ -334,6 +327,6 @@ int main()
         cvWaitKey(1);
 
     }
-    cvReleaseCapture(&capture);*/
+    cvReleaseCapture(&capture);
 
 }
