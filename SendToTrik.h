@@ -17,6 +17,8 @@ struct Trik
         addr.sin_port = htons(PortOut);
         addr.sin_addr.s_addr = inet_addr(s_IP.c_str());
         connect(s,(SOCKADDR *) & addr, sizeof (addr));
+        for(int i=0;i<4;i++)
+            vals[i]="0";
     }
     //Деструктор
     ~Trik()
@@ -35,6 +37,8 @@ struct Trik
         strGen();
         sendto(s,&pad0[0],pad0.size(),0,(SOCKADDR *) & addr, sizeof (addr));
         sendto(s,&pad1[0],pad1.size(),0,(SOCKADDR *) & addr, sizeof (addr));
+        for(int i=0;i<4;i++)
+            vals[i]="0";
     }
     //Записать строки в произвольном порядке
     void set_str(string s1, int v1, string s2="", int v2=-1, string s3="", int v3=-1, string s4="", int v4=-1)
