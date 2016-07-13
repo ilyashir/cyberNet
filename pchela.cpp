@@ -221,16 +221,16 @@ void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps
     for(int i=0;i<image->width;i++)
     {
         for(int j=0;j<image->height&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j++)
-            PointVal(image,i,j,1)=255;
+            cvCircle(image,cvPoint(i,j),0,CV_RGB(255,255,255),CV_FILLED);
         for(int j=image->height-1;j>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j--)
-            PointVal(image,i,j,1)=255;
+            cvCircle(image,cvPoint(i,j),0,CV_RGB(255,255,255),CV_FILLED);
     }
     for(int j=0;j<image->height;j++)
     {
         for(int i=0;i<image->width&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i++)
-            PointVal(image,i,j,1)=255;
+            cvCircle(image,cvPoint(i,j),0,CV_RGB(255,255,255),CV_FILLED);
         for(int i=image->width-1;i>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i--)
-            PointVal(image,i,j,1)=255;
+            cvCircle(image,cvPoint(i,j),0,CV_RGB(255,255,255),CV_FILLED);
     }
     cvCopy(image, text1);
     //Алгоритмом Лапласа ищем контрастные участки
@@ -243,6 +243,21 @@ void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps
         for(int j=0;j<text1->height;j++)
             PointVal(text2,i,j,1)=max(PointVal(text1,i,j,1),max(PointVal(text1,i,j,2),PointVal(text1,i,j,3)));
     cvThreshold(text2,text2,50,255,CV_THRESH_BINARY_INV);
+    //Убираем рябь по краю доски
+    for(int i=0;i<text2->width;i++)
+    {
+        for(int j=0;j<text2->height&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j++)
+            cvCircle(text2,cvPoint(i,j),3,CV_RGB(255,255,255),CV_FILLED);
+        for(int j=text2->height-1;j>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j--)
+            cvCircle(text2,cvPoint(i,j),3,CV_RGB(255,255,255),CV_FILLED);
+    }
+    for(int j=0;j<text2->height;j++)
+    {
+        for(int i=0;i<text2->width&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i++)
+            cvCircle(text2,cvPoint(i,j),3,CV_RGB(255,255,255),CV_FILLED);
+        for(int i=text2->width-1;i>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i--)
+            cvCircle(text2,cvPoint(i,j),3,CV_RGB(255,255,255),CV_FILLED);
+    }
 
     //Ищем желтую и оранжевую метки
     comps_y = Comps(sameColor(image,yellow));
@@ -265,16 +280,13 @@ void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps
                     r=PointVal(image, p.x, p.y, 1),
                     g=PointVal(image, p.x, p.y, 2),
                     b=PointVal(image, p.x, p.y, 3),
-                    k=min(min(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2)), PointVal(image, p.x, p.y, 3));//cout<<r<<' '<<g<<' '<<k<<endl;
+                    k=max(max(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2)), PointVal(image, p.x, p.y, 3));//cout<<r<<' '<<g<<' '<<k<<endl;
                     if(r==k)
-                    {
-                        pow=g;
-                        ind=1;
-                    }
-                    else{
-                        pow=r;
                         ind=0;
-                    }
+                    else if(g-r>b-g)
+                        ind=1;
+                    else
+                        ind=2;
                 }
                 switch(ind)
                 {
@@ -287,7 +299,7 @@ void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps
                     //if(pow>0.98)
                         break;
                 case 2:
-                    cvCircle(text3,p,0,CV_RGB(255,255,255));
+                    cvCircle(text3,p,0,CV_RGB(0,0,255));
                     //if(pow>0.98)
                         break;
                 default:
@@ -305,16 +317,16 @@ void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps
     //Убираем все, что не выделено
     for(int i=0;i<text3->width;i++)
     {
-        for(int j=0;j<text3->height&&PointVal(text3,i,j,1)!=0;j++)
+        for(int j=0;j<text3->height&&PointVal(text3,i,j,2)!=0||PointVal(text3,i,j,3)!=0;j++)
             PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
-        for(int j=text3->height-1;j>=0&&PointVal(text3,i,j,1)!=0;j--)
+        for(int j=text3->height-1;j>=0&&PointVal(text3,i,j,2)!=0||PointVal(text3,i,j,3)!=0;j--)
             PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
     }
     for(int j=0;j<text3->height;j++)
     {
-        for(int i=0;i<text3->width&&PointVal(text3,i,j,1)!=0;i++)
+        for(int i=0;i<text3->width&&PointVal(text3,i,j,2)!=0||PointVal(text3,i,j,3)!=0;i++)
             PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
-        for(int i=text3->width-1;i>=0&&PointVal(text3,i,j,1)!=0;i--)
+        for(int i=text3->width-1;i>=0&&PointVal(text3,i,j,2)!=0||PointVal(text3,i,j,3)!=0;i--)
             PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
     }
 }
@@ -326,21 +338,22 @@ int main()
     cout<<"W8 ";
     IplImage*  frame   = NULL;
     char c=0;
-    CvCapture* capture = cvCreateCameraCapture(0);
+    CvCapture* capture = cvCreateCameraCapture(1);
     while(c != 13)
     {
         float fps=31;
         /*while(fps>30)
         {
             int time=clock();
-            frame = cvQueryFrame(capture);
             fps=1000.0/(clock()-time);
         }*/
+        frame = cvQueryFrame(capture);
+
         static IplImage* text4 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
         cvShowImage("frame",frame);
         ProcessBoard(frame,text4,comps_o,comps_y,comps_board,robot);
         cvShowImage("text4",text4);
-        cvWaitKey(1);
+        c=cvWaitKey(1);
 
     }
     cvReleaseCapture(&capture);
