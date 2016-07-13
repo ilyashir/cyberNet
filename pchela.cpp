@@ -210,6 +210,7 @@ int main()
         static IplImage* text1 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
         static IplImage* text2 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
         static IplImage* text3 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+        static IplImage* text4 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
         cvResize(frame,image);
 
         Comps comps_y(sameColor(image,yellow));
@@ -244,6 +245,7 @@ int main()
             for(int i=text2->width-1;i>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i--)
                 PointVal(text2,i,j,1)=255;
         }
+        cvShowImage("text2",text2);
         sameColor(image,red,2);
         sameColor(image,green,3);
         sameColor(image,blue,4);
@@ -297,10 +299,28 @@ int main()
         robot.calculate(comps_y.maxComp.center,comps_o.maxComp.center);
         //cout<<robot.center.x<<' '<<robot.center.y<<endl;
         cvCircle(text3,robot.center,robot.radius,CV_RGB(255,255,255),CV_FILLED);
-        cvShowImage("text",text3);
-        cvShowImage("yellow",yellow);
-        cvShowImage("orange",orange);
-        cvShowImage("frame",frame);
+        cvCopy(text3,text4);
+        for(int i=0;i<text3->width;i++)
+        {
+            for(int j=0;j<text3->height&&PointVal(text3,i,j,1)!=0;j++)
+                PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
+            for(int j=text3->height-1;j>=0&&PointVal(text3,i,j,1)!=0;j--)
+                PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
+        }
+        for(int j=0;j<text3->height;j++)
+        {
+            for(int i=0;i<text3->width&&PointVal(text3,i,j,1)!=0;i++)
+                PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
+            for(int i=text3->width-1;i>=0&&PointVal(text3,i,j,1)!=0;i--)
+                PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
+        }
+        cvCircle(image,robot.left_point,3,CV_RGB(255,255,0),CV_FILLED);
+        cvCircle(image,robot.center,3,CV_RGB(255,0,0),CV_FILLED);
+        cvCircle(image,robot.right_point,3,CV_RGB(255,128,0),CV_FILLED);
+        cvShowImage("grey",grey);
+        cvShowImage("text3",text3);
+        cvShowImage("text4",text4);
+        cvShowImage("frame",image);
         //system("cls");
         cvWaitKey(1);
 
