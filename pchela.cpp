@@ -15,6 +15,7 @@ using namespace std;
 #define PointVal(image, x, y, channel) (*getCvPixelPtr(image, x, y, channel))
 
 const double PI = 3.1415926535897932384626433832795;
+const int scale=2;
 
 //Получение значений пикселей
 unsigned char* getCvPixelPtr(IplImage* image, int x, int y, int channel)
@@ -122,6 +123,10 @@ struct Comps
     vector<Comp> comps;
     vector<vector<int> > windowArray;
     Comp maxComp;
+    Comps()
+    {
+
+    }
     Comps(IplImage *image)
     {
         int sW=image->width;
@@ -190,10 +195,130 @@ struct Comps
         }
     }
 };
+void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps_y, Comps& comps_board, Robot& robot)
+{
+    static IplImage* image = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+    static IplImage* grey = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
+    static IplImage* yellow = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+    static IplImage* orange = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+    static IplImage* red = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+    static IplImage* green = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+    static IplImage* blue = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+    static IplImage* text1 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+    static IplImage* text2 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
+    static IplImage* text3 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+    cvResize(frame,image);
+    //Ищем желтую и оранжевую метки
+    comps_y = Comps(sameColor(image,yellow));
+    comps_o = Comps(sameColor(image,orange,1));
+    cvResize(frame, text1);
+    //Алгоритмом Лапласа ищем контрастные участки
+    cvLaplace(text1,text1);
+    for(int i=0;i<text2->width;i++)
+        for(int j=0;j<text2->height;j++)
+            PointVal(text2,i,j,1)=0;
+    //Увеличиваем контрастность
+    for(int i=0;i<text1->width;i++)
+        for(int j=0;j<text1->height;j++)
+            PointVal(text2,i,j,1)=max(PointVal(text1,i,j,1),max(PointVal(text1,i,j,2),PointVal(text1,i,j,3)));
+    //Делаем контрастное чб изображение
+    for(int i=0;i<image->width;i++)
+        for(int j=0;j<image->height;j++)
+            PointVal(grey,i,j,0)=min(PointVal(image,i,j,1),min(PointVal(image,i,j,2),PointVal(image,i,j,3)));
+    //Бинаризуем контрастные изображения
+    cvThreshold(grey,grey,115,255,CV_THRESH_BINARY);
+    cvThreshold(text2,text2,80,255,CV_THRESH_BINARY_INV);
+    //Определяем доску компонентой
+    comps_board = Comps(grey);
+    //Убираем все, что этой компоненте не принадлежит
+    for(int i=0;i<text2->width;i++)
+    {
+        for(int j=0;j<text2->height&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j++)
+            PointVal(text2,i,j,1)=255;
+        for(int j=text2->height-1;j>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j--)
+            PointVal(text2,i,j,1)=255;
+    }
+    for(int j=0;j<text2->height;j++)
+    {
+        for(int i=0;i<text2->width&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i++)
+            PointVal(text2,i,j,1)=255;
+        for(int i=text2->width-1;i>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i--)
+            PointVal(text2,i,j,1)=255;
+    }
+    //Разделяем на зеленый - не зеленый
+    for(int x=0;x<image->width;x++)
+        for(int y=0;y<image->height;y++)
+        {
+            CvPoint p=cvPoint(x,y);
+            if(PointVal(text2,x,y,1)==0)
+            {
+                float pow=0;int ind=3;
+                for(int i=0;i<=0;i++)
+                    for(int j=0;j<=0;j++)
+                {
+                    CvPoint p=cvPoint(x+i,y+j);
+                    if(p.x<0||p.x>=image->width||p.y<0||p.y>=image->height)
+                        continue;
+                    double r=color1IsColor2(CV_RGB(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2), PointVal(image, p.x, p.y, 3)), getColor(2)),
+                    g=color1IsColor2(CV_RGB(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2), PointVal(image, p.x, p.y, 3)), getColor(3))
+                    ,k=min(min(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2)), PointVal(image, p.x, p.y, 3));//cout<<r<<' '<<g<<' '<<k<<endl;
+                    if(r>g&&r>pow)
+                    {
+                        pow=r;
+                        ind=0;
+                    }
+                    else if(g>pow){
+                        pow=g;
+                        ind=1;
+                    }
+                }
+                switch(ind)
+                {
+                case 0:
+                    cvCircle(text3,p,0,CV_RGB(255,0,0));
+                    //if(pow>0.7)
+                        break;
+                case 1:
+                    cvCircle(text3,p,0,CV_RGB(0,255,0));
+                    //if(pow>0.98)
+                        break;
+                case 2:
+                    cvCircle(text3,p,0,CV_RGB(255,255,255));
+                    //if(pow>0.98)
+                        break;
+                default:
+                    cvCircle(text3,p,0,CV_RGB(0,0,0));
+                }
+            }
+            else
+                cvCircle(text3,p,0,CV_RGB(255,255,255));
+        }
+    robot.calculate(comps_y.maxComp.center,comps_o.maxComp.center);
+    //cout<<robot.center.x<<' '<<robot.center.y<<endl;
+    //Игнорируем робота
+    cvCircle(text3,robot.center,robot.radius,CV_RGB(255,255,255),CV_FILLED);
+    cvCopy(text3,text4);
+    //Убираем все, что не выделено
+    for(int i=0;i<text3->width;i++)
+    {
+        for(int j=0;j<text3->height&&PointVal(text3,i,j,1)!=0;j++)
+            PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
+        for(int j=text3->height-1;j>=0&&PointVal(text3,i,j,1)!=0;j--)
+            PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
+    }
+    for(int j=0;j<text3->height;j++)
+    {
+        for(int i=0;i<text3->width&&PointVal(text3,i,j,1)!=0;i++)
+            PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
+        for(int i=text3->width-1;i>=0&&PointVal(text3,i,j,1)!=0;i--)
+            PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
+    }
+}
 int main()
 {
     //Trik trik1("192.168.77.1");
     Robot robot;
+    Comps comps_y,comps_o,comps_board;
     cout<<"W8 ";
     IplImage*  frame   = NULL;
     char c=0;
@@ -207,134 +332,10 @@ int main()
             frame = cvQueryFrame(capture);
             fps=1000.0/(clock()-time);
         }
-        const int scale=2.5;
-        static IplImage* image = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
-        static IplImage* grey = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
-        static IplImage* yellow = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
-        static IplImage* orange = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
-        static IplImage* red = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
-        static IplImage* green = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
-        static IplImage* blue = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
-        static IplImage* text1 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
-        static IplImage* text2 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
-        static IplImage* text3 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
         static IplImage* text4 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
-        cvResize(frame,image);
-        //Ищем желтую и оранжевую метки
-        Comps comps_y(sameColor(image,yellow));
-        Comps comps_o(sameColor(image,orange,1));
-        cvResize(frame, text1);
-        //Алгоритмом Лапласа ищем контрастные участки
-        cvLaplace(text1,text1);
-        for(int i=0;i<text2->width;i++)
-            for(int j=0;j<text2->height;j++)
-                PointVal(text2,i,j,1)=0;
-        //Увеличиваем контрастность
-        for(int i=0;i<text1->width;i++)
-            for(int j=0;j<text1->height;j++)
-                PointVal(text2,i,j,1)=max(PointVal(text1,i,j,1),max(PointVal(text1,i,j,2),PointVal(text1,i,j,3)));
-        //Делаем контрастное чб изображение
-        for(int i=0;i<image->width;i++)
-            for(int j=0;j<image->height;j++)
-                PointVal(grey,i,j,0)=min(PointVal(image,i,j,1),min(PointVal(image,i,j,2),PointVal(image,i,j,3)));
-        //Бинаризуем контрастные изображения
-        cvThreshold(grey,grey,115,255,CV_THRESH_BINARY);
-        cvThreshold(text2,text2,80,255,CV_THRESH_BINARY_INV);
-        //Определяем доску компонентой
-        Comps comps_board(grey);
-        //Убираем все, что этой компоненте не принадлежит
-        for(int i=0;i<text2->width;i++)
-        {
-            for(int j=0;j<text2->height&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j++)
-                PointVal(text2,i,j,1)=255;
-            for(int j=text2->height-1;j>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j--)
-                PointVal(text2,i,j,1)=255;
-        }
-        for(int j=0;j<text2->height;j++)
-        {
-            for(int i=0;i<text2->width&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i++)
-                PointVal(text2,i,j,1)=255;
-            for(int i=text2->width-1;i>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i--)
-                PointVal(text2,i,j,1)=255;
-        }
-        cvShowImage("text2",text2);
-        //Разделяем на зеленый - не зеленый
-        for(int x=0;x<image->width;x++)
-            for(int y=0;y<image->height;y++)
-            {
-                CvPoint p=cvPoint(x,y);
-                if(PointVal(text2,x,y,1)==0)
-                {
-                    float pow=0;int ind=3;
-                    for(int i=0;i<=0;i++)
-                        for(int j=0;j<=0;j++)
-                    {
-                        CvPoint p=cvPoint(x+i,y+j);
-                        if(p.x<0||p.x>=image->width||p.y<0||p.y>=image->height)
-                            continue;
-                        double r=color1IsColor2(CV_RGB(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2), PointVal(image, p.x, p.y, 3)), getColor(2)),
-                        g=color1IsColor2(CV_RGB(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2), PointVal(image, p.x, p.y, 3)), getColor(3))
-                        ,k=min(min(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2)), PointVal(image, p.x, p.y, 3));//cout<<r<<' '<<g<<' '<<k<<endl;
-                        if(r>g&&r>pow)
-                        {
-                            pow=r;
-                            ind=0;
-                        }
-                        else if(g>pow){
-                            pow=g;
-                            ind=1;
-                        }
-                    }
-                    switch(ind)
-                    {
-                    case 0:
-                        cvCircle(text3,p,0,CV_RGB(255,0,0));
-                        //if(pow>0.7)
-                            break;
-                    case 1:
-                        cvCircle(text3,p,0,CV_RGB(0,255,0));
-                        //if(pow>0.98)
-                            break;
-                    case 2:
-                        cvCircle(text3,p,0,CV_RGB(255,255,255));
-                        //if(pow>0.98)
-                            break;
-                    default:
-                        cvCircle(text3,p,0,CV_RGB(0,0,0));
-                    }
-                }
-                else
-                    cvCircle(text3,p,0,CV_RGB(255,255,255));
-            }
-        robot.calculate(comps_y.maxComp.center,comps_o.maxComp.center);
-        //cout<<robot.center.x<<' '<<robot.center.y<<endl;
-        //Игнорируем робота
-        cvCircle(text3,robot.center,robot.radius,CV_RGB(255,255,255),CV_FILLED);
-        cvCopy(text3,text4);
-        //Убираем все, что не выделено
-        for(int i=0;i<text3->width;i++)
-        {
-            for(int j=0;j<text3->height&&PointVal(text3,i,j,1)!=0;j++)
-                PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
-            for(int j=text3->height-1;j>=0&&PointVal(text3,i,j,1)!=0;j--)
-                PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
-        }
-        for(int j=0;j<text3->height;j++)
-        {
-            for(int i=0;i<text3->width&&PointVal(text3,i,j,1)!=0;i++)
-                PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
-            for(int i=text3->width-1;i>=0&&PointVal(text3,i,j,1)!=0;i--)
-                PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
-        }
-        //Помечаем метки
-        cvCircle(image,robot.left_point,3,CV_RGB(255,255,0),CV_FILLED);
-        cvCircle(image,robot.center,3,CV_RGB(255,0,0),CV_FILLED);
-        cvCircle(image,robot.right_point,3,CV_RGB(255,128,0),CV_FILLED);
-        cvShowImage("grey",grey);
-        cvShowImage("text3",text3);
+        cvShowImage("frame",frame);
+        ProcessBoard(frame,text4,comps_o,comps_y,comps_board,robot);
         cvShowImage("text4",text4);
-        cvShowImage("frame",image);
-        //system("cls");
         cvWaitKey(1);
 
     }
