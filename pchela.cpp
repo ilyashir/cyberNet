@@ -50,7 +50,7 @@ float color1IsColor2(CvScalar color1, CvScalar color2)
     return (r1*r2 + g1*g2 + b1*b2)/sqrt(r1*r1 + g1*g1 + b1*b1)/sqrt(r2*r2 + g2*g2 + b2*b2);
 }
 //Сравниваем цвета на всем изображении с эталонным
-IplImage* sameColor(IplImage* src, IplImage* dst, int numColor = 0, double k1 = 0.98)
+IplImage* sameColor(IplImage* src, IplImage* dst, int numColor = 0, double k1 = 0.99)
 {
     CvScalar color=getColor(numColor);
     for(int x = 0; x < src->width; x++)
@@ -352,13 +352,42 @@ int main()
 
         frame = cvQueryFrame(capture);
         static IplImage* text4 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+        static IplImage* final_b = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
         ProcessBoard(frame,text4,comps_o,comps_y,comps_board,robot);
+        //Отрисовываем робота
         cvCircle(frame,cvPoint(robot.center.x*2,robot.center.y*2),robot.radius*2,CV_RGB(255,0,0));
         cvCircle(frame,cvPoint(robot.center.x*2,robot.center.y*2),3,CV_RGB(255,0,0),-1);
         cvCircle(frame,cvPoint(robot.left_point.x*2,robot.left_point.y*2),3,CV_RGB(255,255,0),-1);
         cvCircle(frame,cvPoint(robot.right_point.x*2,robot.right_point.y*2),3,CV_RGB(255,128,0),-1);
         cvShowImage("text4",text4);
+        const int speed=30;
+        //Создаем финальное изображение
+        static IplImage* board = NULL;
+        if(board==NULL)
+        {
+            board = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+            cvCopy(text4,board);
+        }
+        for(int i=0;i<board->width;i++)
+            for(int j=0;j<board->height;j++)
+        {
+            if(_hypot(i-robot.center.x,j-robot.center.y)<=robot.radius/2)
+                cvCircle(board,cvPoint(i,j),0,CV_RGB(255,255,255));
+            if(_hypot(i-robot.center.x,j-robot.center.y)<=robot.radius)
+                continue;
+            for(int k=0;k<board->nChannels;k++)
+            {
+                int a=PointVal(board,i,j,k);
+                if(PointVal(text4,i,j,k)==0)
+                    PointVal(board,i,j,k)=max(a-speed,0);
+                if(PointVal(text4,i,j,k)==255)
+                    PointVal(board,i,j,k)=min(a+speed,255);
+            }
+        }
+        cvThreshold(board,final_b,50,255,CV_THRESH_BINARY);
         cvShowImage("frame",frame);
+        cvShowImage("board",board);
+        cvShowImage("final",final_b);
         c=cvWaitKey(1);
 
     }
