@@ -5,10 +5,10 @@ var main = function()
 {
 	x = 0;
 	y = 0;
-	while (!gamepad.isConnected()) {
-		script.wait(10);
-	}
-	brick.playSound("media/beep.wav");
+	//while (!gamepad.isConnected()) {
+	//	script.wait(10);
+	//}
+	//brick.playSound("media/beep.wav");
 	while(true)
 	{
 		if (gamepad.isPadPressed(1)) {
@@ -22,7 +22,7 @@ var main = function()
 			brick.display().addLabel(y1,10,70);
 			brick.display().redraw();
 		}
-		var mes=228; 
+		var mes=1234; 
 		script.sendMessage(mes);
 		script.wait(100);
 	}
