@@ -2,8 +2,12 @@
 #include <winsock2.h>
 #include <Ws2tcpip.h>
 #include <stdio.h>
-#include<string>
+#include <string>
+#include <sstream>
 using namespace std;
+#define BUFF 20
+#define SSTR( x ) static_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
 struct Trik
 {
     //Конструктор
@@ -30,7 +34,8 @@ struct Trik
         addr_in.sin_port = htons(8888);
         addr_in.sin_addr.s_addr = inet_addr(s_IP.c_str());
         connect(s_in,(SOCKADDR *) &addr_in, sizeof(addr_in));
-        buf = new char[13];
+        alive();
+        buf = new char[BUFF];
     }
     //Деструктор
     ~Trik()
@@ -45,49 +50,43 @@ struct Trik
     {
         pad0="pad 0 "+vals[0]+" "+vals[1]+"\n";
         pad1="pad 1 "+vals[2]+" "+vals[3]+"\n";
+        alive();
     }
     //Отправить обе строки
     void sendmsg()
     {
+        alive();
         strGen();
         sendto(s_out,&pad0[0],pad0.size(),0,(SOCKADDR *) & addr_out, sizeof (addr_out));
         sendto(s_out,&pad1[0],pad1.size(),0,(SOCKADDR *) & addr_out, sizeof (addr_out));
         for(int i=0;i<4;i++)
             vals[i]="0";
+        alive();
+    }
+    void alive()
+    {
+        string str="keepalive";
+        send(s_in, &str[0], str.size(), 0);
     }
     int recievemsg()
     {
+        alive();
         int n;
-        string str="keepalive";
-        send(s_in, &str[0], str.size(), 0);
-		n=recv(s_in, buf, 13, 0);
-		return n;
+        n=recv(s_in, buf, BUFF, 0);
+        int l=0;
+        for(int i=0;i<20&&buf[i]!=':';i++)
+            l=l*10+buf[i]-'0';
+        int v=0;
+        for(int i=(n-l)+7;i<n;i++)
+            v=v*10+buf[i]-'0';
+        alive();
+		return v;
     }
-    //Записать строки в произвольном порядке
-    void set_str(string s1, int v1, string s2="", int v2=-1, string s3="", int v3=-1, string s4="", int v4=-1)
+    void set_vals(int* val)
     {
-        vals[v1]=s1;
-        if(v2!=-1)
-            vals[v2]=s2;
-        if(v3!=-1)
-            vals[v3]=s3;
-        if(v4!=-1)
-            vals[v4]=s4;
-    }
-    //Записать строки последовательно
-    void set_str(int n, string s1, string s2="", string s3="", string s4="")
-    {
-        switch(n)
-        {
-        case 4:
-            vals[3]=s4;
-        case 3:
-            vals[2]=s3;
-        case 2:
-            vals[1]=s2;
-        case 1:
-            vals[0]=s1;
-        }
+        for(int i=0;i<4;i++)
+            vals[i]=SSTR(val[i]);
+        alive();
     }
     //Запуск связи
     void start()
