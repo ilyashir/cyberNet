@@ -49,7 +49,7 @@ struct Trik
         pad1="pad 1 "+vals[2]+" "+vals[3]+"\n";
     }
     //Отправить обе строки
-    void send()
+    void sendmsg()
     {
         strGen();
         sendto(s_out,&pad0[0],pad0.size(),0,(SOCKADDR *) & addr_out, sizeof (addr_out));
@@ -57,11 +57,13 @@ struct Trik
         for(int i=0;i<4;i++)
             vals[i]="0";
     }
-    void recieve()
+    int recievemsg()
     {
+        int n;
         string str="keepalive";
-        send(s, &str[0], str.size(), 0);
-		recv(s, buf, 13, 0);
+        send(s_in, &str[0], str.size(), 0);
+		n=recv(s_in, buf, 13, 0);
+		return n;
     }
     //Записать строки в произвольном порядке
     void set_str(string s1, int v1, string s2="", int v2=-1, string s3="", int v3=-1, string s4="", int v4=-1)
