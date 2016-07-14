@@ -195,7 +195,7 @@ struct Comps
         }
     }
 };
-void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps_y, Comps& comps_board, Robot& robot)
+void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& comps_y, Comps& comps_board, Robot& robot)
 {
     static IplImage* image = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
     static IplImage* grey = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
@@ -207,6 +207,7 @@ void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps
     static IplImage* text1 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
     static IplImage* text2 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
     static IplImage* text3 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+    static IplImage* text4 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
     cvResize(frame,image);
 
     //Делаем контрастное чб изображение
@@ -242,7 +243,7 @@ void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps
     for(int i=0;i<text1->width;i++)
         for(int j=0;j<text1->height;j++)
             PointVal(text2,i,j,1)=max(PointVal(text1,i,j,1),max(PointVal(text1,i,j,2),PointVal(text1,i,j,3)));
-    cvThreshold(text2,text2,50,255,CV_THRESH_BINARY_INV);
+    cvThreshold(text2,text2,30,255,CV_THRESH_BINARY_INV);
     //Убираем рябь по краю доски
     for(int i=0;i<text2->width;i++)
     {
@@ -329,8 +330,32 @@ void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps
         for(int i=text3->width-1;i>=0&&(PointVal(text3,i,j,2)!=0||PointVal(text3,i,j,3)!=0);i--)
             PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
     }
-    cvShowImage("yellow",yellow);
-    cvShowImage("orange",orange);
+    const int speed=30;
+    //Создаем финальное изображение
+    static IplImage* board = NULL;
+    if(board==NULL)
+    {
+        board = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+        cvCopy(text4,board);
+    }
+    //Убираем помехи
+    for(int i=0;i<board->width;i++)
+        for(int j=0;j<board->height;j++)
+    {
+        if(_hypot(i-robot.center.x,j-robot.center.y)<=robot.radius/2)
+            cvCircle(board,cvPoint(i,j),0,CV_RGB(255,255,255));
+        if(_hypot(i-robot.center.x,j-robot.center.y)<=robot.radius)
+            continue;
+        for(int k=0;k<board->nChannels;k++)
+        {
+            int a=PointVal(board,i,j,k);
+            if(PointVal(text4,i,j,k)==0)
+                PointVal(board,i,j,k)=max(a-speed,0);
+            if(PointVal(text4,i,j,k)==255)
+                PointVal(board,i,j,k)=min(a+speed,255);
+        }
+    }
+    cvThreshold(board,final_b,50,255,CV_THRESH_BINARY);
 }
 int main()
 {
@@ -351,42 +376,16 @@ int main()
         }*/
 
         frame = cvQueryFrame(capture);
-        static IplImage* text4 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
         static IplImage* final_b = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
-        ProcessBoard(frame,text4,comps_o,comps_y,comps_board,robot);
+        ProcessBoard(frame,final_b,comps_o,comps_y,comps_board,robot);
+
+
         //Отрисовываем робота
         cvCircle(frame,cvPoint(robot.center.x*2,robot.center.y*2),robot.radius*2,CV_RGB(255,0,0));
         cvCircle(frame,cvPoint(robot.center.x*2,robot.center.y*2),3,CV_RGB(255,0,0),-1);
         cvCircle(frame,cvPoint(robot.left_point.x*2,robot.left_point.y*2),3,CV_RGB(255,255,0),-1);
         cvCircle(frame,cvPoint(robot.right_point.x*2,robot.right_point.y*2),3,CV_RGB(255,128,0),-1);
-        cvShowImage("text4",text4);
-        const int speed=30;
-        //Создаем финальное изображение
-        static IplImage* board = NULL;
-        if(board==NULL)
-        {
-            board = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
-            cvCopy(text4,board);
-        }
-        for(int i=0;i<board->width;i++)
-            for(int j=0;j<board->height;j++)
-        {
-            if(_hypot(i-robot.center.x,j-robot.center.y)<=robot.radius/2)
-                cvCircle(board,cvPoint(i,j),0,CV_RGB(255,255,255));
-            if(_hypot(i-robot.center.x,j-robot.center.y)<=robot.radius)
-                continue;
-            for(int k=0;k<board->nChannels;k++)
-            {
-                int a=PointVal(board,i,j,k);
-                if(PointVal(text4,i,j,k)==0)
-                    PointVal(board,i,j,k)=max(a-speed,0);
-                if(PointVal(text4,i,j,k)==255)
-                    PointVal(board,i,j,k)=min(a+speed,255);
-            }
-        }
-        cvThreshold(board,final_b,50,255,CV_THRESH_BINARY);
         cvShowImage("frame",frame);
-        cvShowImage("board",board);
         cvShowImage("final",final_b);
         c=cvWaitKey(1);
 
