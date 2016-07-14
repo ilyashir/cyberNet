@@ -50,7 +50,7 @@ float color1IsColor2(CvScalar color1, CvScalar color2)
     return (r1*r2 + g1*g2 + b1*b2)/sqrt(r1*r1 + g1*g1 + b1*b1)/sqrt(r2*r2 + g2*g2 + b2*b2);
 }
 //Сравниваем цвета на всем изображении с эталонным
-IplImage* sameColor(IplImage* src, IplImage* dst, int numColor = 0, double k1 = 0.995)
+IplImage* sameColor(IplImage* src, IplImage* dst, int numColor = 0, double k1 = 0.98)
 {
     CvScalar color=getColor(numColor);
     for(int x = 0; x < src->width; x++)
@@ -98,7 +98,7 @@ struct Robot
         left_point=l;
         right_point=r;
         center=cvPoint((l.x+r.x)/2,(l.y+r.y)/2);
-        radius=_hypot(r.x-l.x,r.y-l.y);
+        radius=_hypot(r.x-l.x,r.y-l.y)*1.5;
         ang=atan2(r.x-l.x,r.y-l.y);
     }
 };
@@ -317,18 +317,20 @@ void ProcessBoard(IplImage* frame, IplImage* text4, Comps& comps_o, Comps& comps
     //Убираем все, что не выделено
     for(int i=0;i<text3->width;i++)
     {
-        for(int j=0;j<text3->height&&PointVal(text3,i,j,2)!=0||PointVal(text3,i,j,3)!=0;j++)
+        for(int j=0;j<text3->height&&(PointVal(text3,i,j,2)!=0||PointVal(text3,i,j,3)!=0);j++)
             PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
-        for(int j=text3->height-1;j>=0&&PointVal(text3,i,j,2)!=0||PointVal(text3,i,j,3)!=0;j--)
+        for(int j=text3->height-1;j>=0&&(PointVal(text3,i,j,2)!=0||PointVal(text3,i,j,3)!=0);j--)
             PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
     }
     for(int j=0;j<text3->height;j++)
     {
-        for(int i=0;i<text3->width&&PointVal(text3,i,j,2)!=0||PointVal(text3,i,j,3)!=0;i++)
+        for(int i=0;i<text3->width&&(PointVal(text3,i,j,2)!=0||PointVal(text3,i,j,3)!=0);i++)
             PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
-        for(int i=text3->width-1;i>=0&&PointVal(text3,i,j,2)!=0||PointVal(text3,i,j,3)!=0;i--)
+        for(int i=text3->width-1;i>=0&&(PointVal(text3,i,j,2)!=0||PointVal(text3,i,j,3)!=0);i--)
             PointVal(text4,i,j,1)=PointVal(text4,i,j,2)=PointVal(text4,i,j,3)=255;
     }
+    cvShowImage("yellow",yellow);
+    cvShowImage("orange",orange);
 }
 int main()
 {
@@ -347,12 +349,16 @@ int main()
             int time=clock();
             fps=1000.0/(clock()-time);
         }*/
-        frame = cvQueryFrame(capture);
 
+        frame = cvQueryFrame(capture);
         static IplImage* text4 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
-        cvShowImage("frame",frame);
         ProcessBoard(frame,text4,comps_o,comps_y,comps_board,robot);
+        cvCircle(frame,cvPoint(robot.center.x*2,robot.center.y*2),robot.radius*2,CV_RGB(255,0,0));
+        cvCircle(frame,cvPoint(robot.center.x*2,robot.center.y*2),3,CV_RGB(255,0,0),-1);
+        cvCircle(frame,cvPoint(robot.left_point.x*2,robot.left_point.y*2),3,CV_RGB(255,255,0),-1);
+        cvCircle(frame,cvPoint(robot.right_point.x*2,robot.right_point.y*2),3,CV_RGB(255,128,0),-1);
         cvShowImage("text4",text4);
+        cvShowImage("frame",frame);
         c=cvWaitKey(1);
 
     }
