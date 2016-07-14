@@ -22,7 +22,7 @@ var main = function()
 			brick.display().addLabel(y1,10,70);
 			brick.display().redraw();
 		}
-		var mes=21; 
+		var mes=228; 
 		script.sendMessage(mes);
 		script.wait(100);
 	}
