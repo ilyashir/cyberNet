@@ -93,7 +93,7 @@ struct Trik
     void start()
     {
         WSADATA wsaData;
-        cout<<WSAStartup(MAKEWORD(2, 2), &wsaData);
+        WSAStartup(MAKEWORD(2, 2), &wsaData);
     }
     //Завершение работы
     void finish()
