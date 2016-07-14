@@ -12,10 +12,10 @@ var main = function()
 	while(true)
 	{
 		if (gamepad.isPadPressed(1)) {
-			x = [gamepad.padX(1), gamepad.padY(1)][0];
-			y = [gamepad.padX(1), gamepad.padY(1)][1];
-			var x1 = [gamepad.padX(0), gamepad.padY(0)][0];
-			var y1 = [gamepad.padX(0), gamepad.padY(0)][1];
+			x = [gamepad.padX(0), gamepad.padY(0)][0];
+			y = [gamepad.padX(0), gamepad.padY(0)][1];
+			var x1 = [gamepad.padX(1), gamepad.padY(1)][0];
+			var y1 = [gamepad.padX(1), gamepad.padY(1)][1];
 			brick.display().addLabel(x,10,25);
 			brick.display().addLabel(y,10,40);
 			brick.display().addLabel(x1,10,55);
