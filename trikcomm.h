@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include<string>
 using namespace std;
-#define PortOut 4444
 struct Trik
 {
     //Конструктор
@@ -18,19 +17,18 @@ struct Trik
             start();
         flag=false;
         //Конструируем отправку
-        s_in  = socket(AF_INET, SOCK_STREAM, 0);
+        s_out = socket(AF_INET, SOCK_STREAM, 0);
         addr_out.sin_family = AF_INET;
-        addr_out.sin_port = htons(PortOut);
+        addr_out.sin_port = htons(4444);
         addr_out.sin_addr.s_addr = inet_addr(s_IP.c_str());
         connect(s_out,(SOCKADDR *) & addr_out, sizeof (addr_out));
         for(int i=0;i<4;i++)
             vals[i]="0";
         //Конструируем прием
-        s_out=socket(AF_INET,SOCK_STREAM,0);
-        int port_in = 8888;
+        s_in=socket(AF_INET,SOCK_STREAM,0);
         addr_in.sin_family = AF_INET;
-        addr_in.sin_addr.s_addr = inet_addr("10.23.46.240");
-        addr_in.sin_port = htons(port_in);
+        addr_in.sin_port = htons(8888);
+        addr_in.sin_addr.s_addr = inet_addr(s_IP.c_str());
         connect(s_in,(SOCKADDR *) &addr_in, sizeof(addr_in));
         buf = new char[13];
     }
@@ -95,7 +93,7 @@ struct Trik
     void start()
     {
         WSADATA wsaData;
-        WSAStartup(MAKEWORD(2, 2), &wsaData);
+        cout<<WSAStartup(MAKEWORD(2, 2), &wsaData);
     }
     //Завершение работы
     void finish()
