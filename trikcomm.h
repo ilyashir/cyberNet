@@ -8,22 +8,39 @@ using namespace std;
 struct Trik
 {
     //Конструктор
-    SOCKET s;
-
+    SOCKET s_out;
+    SOCKET s_in;
+    char *buf;
     Trik(string s_IP)
     {
-        start();
-        addr.sin_family = AF_INET;
-        addr.sin_port = htons(PortOut);
-        addr.sin_addr.s_addr = inet_addr(s_IP.c_str());
-        connect(s,(SOCKADDR *) & addr, sizeof (addr));
+        static bool flag = true;
+        if(flag)
+            start();
+        flag=false;
+        //Конструируем отправку
+        s_in  = socket(AF_INET, SOCK_STREAM, 0);
+        addr_out.sin_family = AF_INET;
+        addr_out.sin_port = htons(PortOut);
+        addr_out.sin_addr.s_addr = inet_addr(s_IP.c_str());
+        connect(s_out,(SOCKADDR *) & addr_out, sizeof (addr_out));
         for(int i=0;i<4;i++)
             vals[i]="0";
+        //Конструируем прием
+        s_out=socket(AF_INET,SOCK_STREAM,0);
+        int port_in = 8888;
+        addr_in.sin_family = AF_INET;
+        addr_in.sin_addr.s_addr = inet_addr("10.23.46.240");
+        addr_in.sin_port = htons(port_in);
+        connect(s_in,(SOCKADDR *) &addr_in, sizeof(addr_in));
+        buf = new char[13];
     }
     //Деструктор
     ~Trik()
     {
-        finish();
+        static bool flag = true;
+        if(flag)
+            finish();
+        flag=false;
     }
     //Создать строки для двух геймпадов
     void strGen()
@@ -35,10 +52,16 @@ struct Trik
     void send()
     {
         strGen();
-        sendto(s,&pad0[0],pad0.size(),0,(SOCKADDR *) & addr, sizeof (addr));
-        sendto(s,&pad1[0],pad1.size(),0,(SOCKADDR *) & addr, sizeof (addr));
+        sendto(s_out,&pad0[0],pad0.size(),0,(SOCKADDR *) & addr_out, sizeof (addr_out));
+        sendto(s_out,&pad1[0],pad1.size(),0,(SOCKADDR *) & addr_out, sizeof (addr_out));
         for(int i=0;i<4;i++)
             vals[i]="0";
+    }
+    void recieve()
+    {
+        string str="keepalive";
+        send(s, &str[0], str.size(), 0);
+		recv(s, buf, 13, 0);
     }
     //Записать строки в произвольном порядке
     void set_str(string s1, int v1, string s2="", int v2=-1, string s3="", int v3=-1, string s4="", int v4=-1)
@@ -71,18 +94,19 @@ struct Trik
     {
         WSADATA wsaData;
         WSAStartup(MAKEWORD(2, 2), &wsaData);
-        s=socket(AF_INET,SOCK_STREAM,0);
     }
     //Завершение работы
     void finish()
     {
-        closesocket(s);
+        closesocket(s_out);
+        closesocket(s_in);
         WSACleanup();
     }
     //Значения
     string vals[4];
     //Адрес
-    sockaddr_in addr;
+    sockaddr_in addr_out;
+    sockaddr_in addr_in;
     //Строки
     string pad0,pad1;
 };

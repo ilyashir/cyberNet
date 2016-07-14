@@ -10,7 +10,7 @@
 #include <string>
 #include <ctime>
 #include <windows.h>
-#include "send.h"
+#include "trikcomm.h"
 using namespace std;
 #define PointVal(image, x, y, channel) (*getCvPixelPtr(image, x, y, channel))
 
