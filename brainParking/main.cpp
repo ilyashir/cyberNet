@@ -1,4 +1,5 @@
 #include "header.h"
+#include <time.h>
 #include <Ws2tcpip.h>
 
 int* getAvailablePlaces(IplImage *image){
@@ -10,7 +11,12 @@ int* getAvailablePlaces(IplImage *image){
 	double p = 0;
 	int x;
 	int y;
-	int arr[] = {0, 0, 0, 0, 0, 0};
+	int k;
+	int l;
+	int *arr = new int[16];
+	for(int i = 0; i<16; i++){
+		arr[i] = 0;
+	}
 	for(CvSeq *seq = contours; seq != 0; seq = seq->h_next){
 		s = cvContourArea(seq);
 		p = cvArcLength(seq);
@@ -18,38 +24,19 @@ int* getAvailablePlaces(IplImage *image){
 			rect = cvBoundingRect(seq);
 			x = rect.x + rect.width/2;
 			y = rect.y + rect.height/2;
-			if(30 < y && y < 50){
-				if(150 < x && x < 180){
-					arr[1] = 1;
-				}
-				if(200 < x && x < 220){
-					arr[3] = 1;
-				}
-				if(240 < x && x < 270){
-					arr[5] = 1;
-				}
-			}
-			if(190 < y && y < 210){
-				if(150 < x && x < 180){
-					arr[0] = 1;
-				}
-				if(200 < x && x < 220){
-					arr[2] = 1;
-				}
-				if(240 < x && x < 270){
-					arr[4] = 1;
-				}
-			}
+			k = (x<100)?0:((x<140)?1:((x<310)?2:3));
+			l = (y>200)?0:((y>160)?1:((y>110)?2:3));
+			arr[k*4 + l] = 1;
 		}
 	}
 	return arr;
 }
 
 int getBestPlace(int *arr){
-	int brr[] = {6, 5, 4, 3, 2, 1};
+	int brr[] = {4, 6, 8, 2, 10, 12, 14, 16, 9, 11, 13, 15, 3, 5, 7, 1};
 	int max = 0;
 	int index = -1;
-	for(int i = 0; i<6; i++){
+	for(int i = 0; i<16; i++){
 		if(arr[i]*brr[i] > max){
 			max = arr[i]*brr[i];
 			index = i;
@@ -63,13 +50,12 @@ void sendAnswer(SOCKET sct, int place){
 	itoa(place, c, 10);
 	std::string s = "pad 0 " + (std::string)c + " 0\n";
     send(sct, &s[0], s.size(), 0);
-	delete c;
 }
 
 int main(){
 	//подключенные автомобили
 	int num = 1;
-	char* ip[] = {"0.0.0.0"};
+	char* ip[] = {"192.168.77.1"};
 
 	//получение сокетов
 	WSADATA wsaData;
@@ -90,7 +76,7 @@ int main(){
 		connect(sct_out[i], (SOCKADDR *) &addr, sizeof(addr));
 	}
 	char *buf = new char[11];
-	std::string s = "keepalive";
+	char *s = "9:keepalive";
 	int n = 0;
 
 	//получение изображения
@@ -99,31 +85,43 @@ int main(){
 	cvNamedWindow("capture", CV_WINDOW_AUTOSIZE);
 	IplImage *frame = 0;
 	IplImage *image = 0;
+	int fps = 30;
+	long t;
 	while(true){
-		frame = cvQueryFrame(capture);
+		t = clock();
+		while(clock() - t < 1000.0/fps){
+			t = clock();
+			frame = cvQueryFrame(capture);
+		}		
 		image = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);
 		cvConvertImage(frame, image, CV_YUV2BGR);
 		cvConvertImage(image, image, CV_BGR2GRAY);
 		cvSmooth(image, image, CV_GAUSSIAN, 3);
-		cvThreshold(image, image, 120, 255, CV_THRESH_BINARY);
+		cvThreshold(image, image, 110, 255, CV_THRESH_BINARY);
 		cvErode(image, image);
 		cvShowImage("capture", image);
 		/* проверка на новые сообщения */
 		for(int i = 0; i<num; i++){
-			send(sct_in[i], &s[0], s.size(), 0);
 			n = recv(sct_in[i], buf, 11, 0);
-			if(n <= 0){
-				std::cout << "error" << std::endl;
+			if(n == -1){
+				std::cout << "error: " << WSAGetLastError << std::endl;
+				break;
 			}
-			if(buf != "9:keepalive"){
-				std::cout << buf << std::endl;
-				n = getBestPlace(getAvailablePlaces(image));
-				std::cout << n << std::endl;
-				sendAnswer(sct_out[i], n);
+			for(int j = 0; j<n; j++){
+				if(buf[j] != s[j]){
+					for(int k = 0; k<n; k++){
+						std::cout << buf[k];
+					}
+					std::cout << std::endl;
+					n = getBestPlace(getAvailablePlaces(image));
+					std::cout << n << std::endl;
+					sendAnswer(sct_out[i], n);
+					break;
+				}
 			}
 		}
 		/* проверка на новые сообщения */
-		if(cvWaitKey(50) == 32){
+ 		if(cvWaitKey(50) == 32){
 			break;
 		}
 	}
