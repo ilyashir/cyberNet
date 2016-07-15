@@ -364,7 +364,7 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
 }
 int main()
 {
-    //Trik trik("192.168.77.1");
+    Trik trik("192.168.77.1");
     Robot robot;
     Comps comps_y,comps_o,comps_board;
     cout<<"W8 ";
@@ -416,8 +416,9 @@ int main()
         cvLine(frame,cvPoint(x*scale,y*scale),cvPoint(robot.center.x*scale,robot.center.y*scale),CV_RGB(255,0,255),2);
         cvShowImage("frame",frame);
         cvShowImage("final",final_b);
-        //cout<<deg<<endl;
-        //trik.sendmsg(deg,dist);
+        system("cls");
+        cout<<deg<<' '<<dist<<endl;
+        trik.sendmsg(deg,dist);
         c=cvWaitKey(1);
 
     }
