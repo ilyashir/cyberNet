@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <string>
 #include <sstream>
-#include <thread>
 #include <ctime>
 using namespace std;
 #define BUFF 120
@@ -18,19 +17,8 @@ private:
     sockaddr_in addr_out;
     sockaddr_in addr_in;
     char *buf;
-    thread aliver;
 public:
     bool active;
-    //Удерживаем сокет
-    void alive()
-    {
-        string str="keepalive";
-        while(active){
-            int t=clock();
-            send(s_in, &str[0], str.size(), 0);
-            while(clock()-t<100);
-        }
-    }
     //Конструктор
     Trik(string s_IP)
     {
@@ -60,7 +48,6 @@ public:
         if(err==0)
             active=true;
         //Запускаем удержание сокета
-        aliver=thread([=]{alive();});
         buf = new char[BUFF];
     }
     //Деструктор
@@ -69,7 +56,6 @@ public:
         delete [] buf;
         //Завершаем поток
         active=false;
-        aliver.join();
         static bool flag = true;
         closesocket(s_out);
         closesocket(s_in);
