@@ -390,8 +390,6 @@ int main()
         cvCircle(frame,cvPoint(robot.center.x*2,robot.center.y*2),3,CV_RGB(255,0,0),-1);
         cvCircle(frame,cvPoint(robot.left_point.x*2,robot.left_point.y*2),3,CV_RGB(255,255,0),-1);
         cvCircle(frame,cvPoint(robot.right_point.x*2,robot.right_point.y*2),3,CV_RGB(255,128,0),-1);
-        cvShowImage("frame",frame);
-        cvShowImage("final",final_b);
         int d=2000;
         static int x=-1,y=-1;
         bool ok=true;
@@ -415,6 +413,9 @@ int main()
         int dist=_hypot(x-robot.center.x,y-robot.center.y);
         if(deg<0)
             deg+=360;
+        cvLine(frame,cvPoint(x*scale,y*scale),cvPoint(robot.center.x*scale,robot.center.y*scale),CV_RGB(255,0,255),2);
+        cvShowImage("frame",frame);
+        cvShowImage("final",final_b);
         //cout<<deg<<endl;
         //trik.sendmsg(deg,dist);
         c=cvWaitKey(1);
