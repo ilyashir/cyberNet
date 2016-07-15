@@ -208,6 +208,7 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
     static IplImage* text2 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
     static IplImage* text3 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
     static IplImage* text4 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+    static IplImage* text5 = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
     cvResize(frame,image);
 
     //Делаем контрастное чб изображение
@@ -355,7 +356,9 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
                 PointVal(board,i,j,k)=min(a+speed,255);
         }
     }
-    cvThreshold(board,final_b,50,255,CV_THRESH_BINARY);
+    cvThreshold(board,text5,50,255,CV_THRESH_BINARY);
+    cvConvertImage(text5,final_b);
+    cvThreshold(final_b,final_b,254,255,CV_THRESH_BINARY);
 }
 int main()
 {
@@ -376,7 +379,7 @@ int main()
         }*/
 
         frame = cvQueryFrame(capture);
-        static IplImage* final_b = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
+        static IplImage* final_b = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
         ProcessBoard(frame,final_b,comps_o,comps_y,comps_board,robot);
 
 
