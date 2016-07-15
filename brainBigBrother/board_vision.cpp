@@ -98,7 +98,7 @@ struct Robot
         left_point=l;
         right_point=r;
         center=cvPoint((l.x+r.x)/2,(l.y+r.y)/2);
-        radius=_hypot(r.x-l.x,r.y-l.y)*1.5;
+        radius=_hypot(r.x-l.x,r.y-l.y)*1;
         ang=atan2(r.x-l.x,r.y-l.y);
     }
 };
