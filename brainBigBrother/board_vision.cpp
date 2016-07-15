@@ -358,13 +358,13 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
     }
     cvThreshold(board,text5,50,255,CV_THRESH_BINARY);
     cvConvertImage(text5,final_b);
-    //cvShowImage("yellow",yellow);
-    //cvShowImage("orange",orange);
+    cvShowImage("yellow",yellow);
+    cvShowImage("orange",orange);
     cvThreshold(final_b,final_b,254,255,CV_THRESH_BINARY);
 }
 int main()
 {
-    Trik trik("192.168.77.1");
+    //Trik trik("192.168.77.1");
     Robot robot;
     Comps comps_y,comps_o,comps_board;
     cout<<"W8 ";
@@ -392,22 +392,31 @@ int main()
         cvCircle(frame,cvPoint(robot.right_point.x*2,robot.right_point.y*2),3,CV_RGB(255,128,0),-1);
         cvShowImage("frame",frame);
         cvShowImage("final",final_b);
-        int d=2000,x=-1,y=-1;
-        for(int i=0;i<final_b->width;i++)
-            for(int j=0;j<final_b->height;j++)
-                if(PointVal(final_b,i,j,1)==0)
-                    if(_hypot(i-robot.center.x,j-robot.center.y)<d)
-                    {
-                        d=_hypot(i-robot.center.x,j-robot.center.y);
-                        x=i;
-                        y=j;
-                    }
+        int d=2000;
+        static int x=-1,y=-1;
+        bool ok=true;
+        if(x==-1)
+            ok=false;
+        if(ok)
+            if(PointVal(final_b,x,y,1)!=0)
+                ok=false;
+        if(!ok)
+            for(int i=0;i<final_b->width;i++)
+                for(int j=0;j<final_b->height;j++)
+                    if(PointVal(final_b,i,j,1)==0)
+                        if(_hypot(i-robot.center.x,j-robot.center.y)<d)
+                        {
+                            d=_hypot(i-robot.center.x,j-robot.center.y);
+                            x=i;
+                            y=j;
+                        }
         double ang=atan2(x-robot.center.x,y-robot.center.y);
         int deg=(ang-robot.ang-PI/2)/PI*180;
         int dist=_hypot(x-robot.center.x,y-robot.center.y);
         if(deg<0)
             deg+=360;
-        trik.sendmsg(deg,dist);
+        //cout<<deg<<endl;
+        //trik.sendmsg(deg,dist);
         c=cvWaitKey(1);
 
     }
