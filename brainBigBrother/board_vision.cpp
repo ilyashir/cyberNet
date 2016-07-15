@@ -50,7 +50,7 @@ float color1IsColor2(CvScalar color1, CvScalar color2)
     return (r1*r2 + g1*g2 + b1*b2)/sqrt(r1*r1 + g1*g1 + b1*b1)/sqrt(r2*r2 + g2*g2 + b2*b2);
 }
 //Сравниваем цвета на всем изображении с эталонным
-IplImage* sameColor(IplImage* src, IplImage* dst, int numColor = 0, double k1 = 0.98)
+IplImage* sameColor(IplImage* src, IplImage* dst, int numColor = 0, double k1 = 0.99)
 {
     CvScalar color=getColor(numColor);
     for(int x = 0; x < src->width; x++)
@@ -364,7 +364,7 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
 }
 int main()
 {
-    Trik trik("192.168.77.1");
+    Trik trik("10.23.46.80");
     Robot robot;
     Comps comps_y,comps_o,comps_board;
     cout<<"W8 ";
@@ -417,7 +417,11 @@ int main()
         cvShowImage("frame",frame);
         cvShowImage("final",final_b);
         system("cls");
-        cout<<deg<<' '<<dist<<endl;
+        cout<<(deg>180?deg-360:deg)<<' '<<dist<<endl;
+        if(!trik.active)
+        {
+            cout<<"Warn: not transmitting";
+        }
         trik.sendmsg(deg,dist);
         c=cvWaitKey(1);
 
