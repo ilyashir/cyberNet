@@ -2,20 +2,15 @@ var end = 0;
 var TASK;
 var end = 0; 
 
-TASK = function(){
-	while (true){
-		while (end != 1){
-			end = Threading.receiveMessage(true);
+var mouth = function(t){
+	for(var i=0;i<t;i++){
+			x = script.random(1, 8);
+			//brick.display().clear();
+			brick.display().showImage('pict'+x+'.png');
+			//brick.display().redraw();
 			script.wait(100);
 		}
-		while(end != 0){
-			end = Threading.receiveMessage(true);
-			x = script.random(1, 8);
-			brick.display().showImage('pict'+x+'.png');
-			script.wait(150);
-		}
-		brick.display().clear();
-	}
+	//brick.display().clear();
 	return;
 }
 
@@ -39,23 +34,33 @@ function speak(){
 }
 function say(text) {
 	print ("say:", text)
-	Threading.sendMessage("speak", 1);//начало работы анимации рта
-	var fileName = "\"" + text +".wav\""
+	var fileName = "\"" + text +".wav\""
+	script.system("rm -f text.txt",true);
 	var cmd = "espeak -v russian_test -s 100 -w " + fileName+" \""+ text + "\""
 		;
 	cmd = "{ { test -r " + fileName + " && echo cached ; } || "
-                         + cmd +  " ; } && aplay " + fileName;
-	var scriptFilename = "say_text_temp.sh"
-	script.system("rm -f " + scriptFilename, true)
-	script.writeToFile(scriptFilename, cmd)
-	script.system(". ./"+scriptFilename, true)
-	Threading.sendMessage("speak", 0);//конец работы анимации рта
+                         + cmd +  " ; } ";
+	
+	var scriptFilename = "say_text_temp.sh";
+	script.system("rm -f " + scriptFilename, true);
+	script.writeToFile(scriptFilename, cmd);
+	script.system(". ./"+scriptFilename,true);
+	script.system("aplay " + fileName + " && echo 123 > text.txt");
+	var ttxt = script.readAll("text.txt");
+	script.wait(1000);
+	while (ttxt == 0){
+		mouth(2);
+		ttxt = script.readAll("text.txt");
+	}
+	//Threading.sendMessage("speak", 0);//конец работы анимации рта
 }
 
 var main = function(){
 	//mailbox.connect(""); //Подключаемся к роботам-помощникам
 	//mailbox.connect("");8
-	Threading.startThread("speak", "TASK");
+	//mouth();
+	//return;
+	//Threading.startThread("speak", "TASK");
 	var i = 0;
 	var sp_h = script.readAll("sp_human.txt");
 	var sp_t = script.readAll("sp_trik.txt");
