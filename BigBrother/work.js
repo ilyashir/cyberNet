@@ -2,72 +2,54 @@ var end = 0;
 var TASK;
 var end = 0; 
 
-TASK = function(){
+TASK = function(){
 	while (true){
 		while (end != 1){
 			end = Threading.receiveMessage(true);
-			script.wait(50);
+			script.wait(100);
 		}
 		while(end != 0){
-			x = script.random(1, 8);
-			if(x == 1){
-				brick.display().showImage('pict1.png');
-			}
-			if(x == 2){
-				brick.display().showImage('pict2.png');
-			}
-			if(x == 3){
-				brick.display().showImage('pict3.png');
-			}
-			if(x == 4){
-				brick.display().showImage('pict4.png');
-			}
-			if(x == 5){
-				brick.display().showImage('pict5.png');
-			}
-			if(x == 6){
-				brick.display().showImage('pict6.png');
-			}
-			if(x == 7){
-				brick.display().showImage('pict7.png');
-			}
-			if(x == 8){
-				brick.display().showImage('pict8.png');
-			}
-			script.wait(100);
 			end = Threading.receiveMessage(true);
-		}
-		brick.display().clear();
+			x = script.random(1, 8);
+			brick.display().showImage('pict'+x+'.png');
+			script.wait(150);
+		}
+		brick.display().clear();
 	}
 	return;
 }
 
 function speak(){
 	var lines = [];
-	script.system("cd scripts")
-	script.removeFile("input.txt");
-	script.writeToFile("input.txt", "");
 	while (brick.keys().isPressed(KeysEnum.Left) != true){
-		script.wait(50);
+		script.wait(150);
 	}
-	script.wait(1500);
-	brick.playSound("media/beep.wav");
-	script.system("arecord -d 3 pew.wav");
-	script.wait(4000);
-	brick.playSound("media/beep.wav");
-	script.system("curl -v -4 \"asr.yandex.net/asr_xml?key=d7059ba7-65ed-45d2-948e-bef1683250bb&uuid=12345678123456798734567812345678&topic=queries&lang=ru-RU\" -H \"Content-Type: audio/x-wav\" --data-binary \"@pew.wav\" | sed 's/.*confidence=\".*\">//' | sed 's#</.*##' | sed -n \"3p\" > input.txt");
-	var t = Date.now();
-	var dt = Date.now();
-	var r = 0;
-	while (lines == 0 && r < 15000){
-		lines = script.readAll("input.txt");
-		dt = Date.now();
-		script.wait(10);
-		r = dt - t;
-	}
-	//script.system('cmd', true);
+	var command = "cd /home/root/trik/scripts && " +
+	" truncate -s 0 input.txt && " +
+        " sleep 1.5 && " +
+        " aplay ../media/beep.wav && " +
+	" arecord -d 3 pew.wav && " +
+	" sleep 4 && " + 
+	" aplay ../media/beep.wav &&" +
+	" timeout -k 2 -s 9 15 curl -v -4 \"asr.yandex.net/asr_xml?key=d7059ba7-65ed-45d2-948e-bef1683250bb&uuid=12345678123456798734567812345678&topic=queries&lang=ru-RU\" -H \"Content-Type: audio/x-wav\" --data-binary \"@pew.wav\" | sed 's/.*confidence=\".*\">//' | sed 's#</.*##' | sed -n \"3p\" > input.txt && " +
+	" true "; // <--- last line
+	script.system(command, true);
 	lines = script.readAll("input.txt");
 	return lines[0];
+}
+function say(text) {
+	print ("say:", text)
+	Threading.sendMessage("speak", 1);//начало работы анимации рта
+	var fileName = "\"" + text +".wav\""
+	var cmd = "espeak -v russian_test -s 100 -w " + fileName+" \""+ text + "\""
+		;
+	cmd = "{ { test -r " + fileName + " && echo cached ; } || "
+                         + cmd +  " ; } && aplay " + fileName;
+	var scriptFilename = "say_text_temp.sh"
+	script.system("rm -f " + scriptFilename, true)
+	script.writeToFile(scriptFilename, cmd)
+	script.system(". ./"+scriptFilename, true)
+	Threading.sendMessage("speak", 0);//конец работы анимации рта
 }
 
 var main = function(){
@@ -77,6 +59,7 @@ var main = function(){
 	var i = 0;
 	var sp_h = script.readAll("sp_human.txt");
 	var sp_t = script.readAll("sp_trik.txt");
+	say("начали")
 	while (true){
 		lines = speak();
 		switch (lines) {
@@ -102,24 +85,16 @@ var main = function(){
 			
 		break;
 		default: {
-			for (i = 0; sp_h[i] != lines; i++){
-				if (i > 15){
+		print("lines:<",lines,">")
+			for (i = 0; i< sp_h.length; i++){
+				if(sp_h[i] == lines){
 					break;
 				}
-				script.wait(10);
 			}
-			if (i > 15){
-				Threading.sendMessage("speak", 1);//начало работы анимации рта
-				brick.say('извините я вас не понял');
-				script.system("cmd", true);
-				///script.wait(5000);
-				Threading.sendMessage("speak", 0);//конец работы анимации рта
+			if (i >= sp_h.length){
+				say('извините я вас не понял');
 			} else {
-				Threading.sendMessage("speak", 1);//начало работы анимации рта
-				brick.say(sp_t[i]);
-				script.system("cmd", true);
-				//script.wait(5000);
-				Threading.sendMessage("speak", 0);//конец работы анимации рта
+				say(sp_t[i]);
 			}
 		} // Просто диалог робота с человеком
 		break;
