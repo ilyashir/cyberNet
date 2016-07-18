@@ -249,16 +249,16 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
     for(int i=0;i<text2->width;i++)
     {
         for(int j=0;j<text2->height&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j++)
-            cvCircle(text2,cvPoint(i,j),3,CV_RGB(255,255,255),CV_FILLED);
+            cvCircle(text2,cvPoint(i,j),50,CV_RGB(255,255,255),CV_FILLED);
         for(int j=text2->height-1;j>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j--)
-            cvCircle(text2,cvPoint(i,j),3,CV_RGB(255,255,255),CV_FILLED);
+            cvCircle(text2,cvPoint(i,j),50,CV_RGB(255,255,255),CV_FILLED);
     }
     for(int j=0;j<text2->height;j++)
     {
         for(int i=0;i<text2->width&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i++)
-            cvCircle(text2,cvPoint(i,j),3,CV_RGB(255,255,255),CV_FILLED);
+            cvCircle(text2,cvPoint(i,j),50,CV_RGB(255,255,255),CV_FILLED);
         for(int i=text2->width-1;i>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i--)
-            cvCircle(text2,cvPoint(i,j),3,CV_RGB(255,255,255),CV_FILLED);
+            cvCircle(text2,cvPoint(i,j),50,CV_RGB(255,255,255),CV_FILLED);
     }
 
     //»щем желтую и оранжевую метки

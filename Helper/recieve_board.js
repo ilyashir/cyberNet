@@ -32,7 +32,7 @@ var main = function()
 		var base = 10 * y0;
 		if(Math.abs(x0)>10)
 			base = 0;
-		if(y0<10)
+		if(y0<25)
 			x0=y0=0;
 		brick.motor("S2").setPower( -base + power+10);
 		brick.motor("S1").setPower( base +power+10);
