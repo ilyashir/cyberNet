@@ -25,24 +25,12 @@ var main = function()
 			if(x0>180)
 				x0 = x0 - 360;
 		}
-		if(Math.abs(x0)<5) x0 = 0;
-		if(Math.abs(y0)<5) y0 = 0;
 		var power = 2 * x0;
-		var base = 1 * y0;
+		var base = 10 * y0;
+		if(Math.abs(x0)>10)
+			base = 0;
 		brick.motor("S2").setPower( -base + power+10);
 		brick.motor("S1").setPower( base +power+10);
-/*	if (x0 > 0){
-		
-			while (x0 > 0){
-				brick.motor("S2").setPower(30);
-				brick.motor("S1").setPower(30);
-			}
-			} else {
-			while (x0 < 0)
-				brick.motor("S2").setPower(-30);
-				brick.motor("S1").setPower(-30);
-			}	
-		break;*/
-		}
+	}
 	return;
 }
