@@ -25,30 +25,32 @@ public:
         active=false;
         static bool flag = true;
         int err=0;
+        buf = new char[BUFF];
         //Поднимаем только один раз
         if(flag){
             WSADATA wsaData;
             err|=WSAStartup(MAKEWORD(2, 2), &wsaData);;
         }
         flag=false;
+        if(err)
+            return;
         //Конструируем отправку
         s_out = socket(AF_INET, SOCK_STREAM, 0);
         addr_out.sin_family = AF_INET;
         addr_out.sin_port = htons(4444);
         addr_out.sin_addr.s_addr = inet_addr(s_IP.c_str());
         err|=connect(s_out,(SOCKADDR *) & addr_out, sizeof (addr_out));
+        if(err)
+            return;
         //Конструируем прием
         s_in=socket(AF_INET,SOCK_STREAM,0);
         addr_in.sin_family = AF_INET;
         addr_in.sin_port = htons(8888);
         addr_in.sin_addr.s_addr = inet_addr(s_IP.c_str());
         err|=connect(s_in,(SOCKADDR *) &addr_in, sizeof(addr_in));
-        //Инициализируем переменные
         //Работаем только если нет ошибки
         if(err==0)
             active=true;
-        //Запускаем удержание сокета
-        buf = new char[BUFF];
     }
     //Деструктор
     ~Trik()
