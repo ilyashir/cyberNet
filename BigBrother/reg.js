@@ -25,7 +25,7 @@ var go_on_edge = function(dist)
 		light = brick.sensor("A1").readRawData();
 	else
 		light = brick.sensor("A2").readRawData();
-	while (Math.min(Math.min(a,b),Math.min(c,d))/180.0*pi*4/Math.sqrt(2.0)<dist && light < 600){
+	while (Math.min(Math.min(a,b),Math.min(c,d))/180.0*pi*4/Math.sqrt(2.0)<dist && light < 800){
 		if(v>0)
 			light = brick.sensor("A1").readRawData();
 		else
@@ -34,16 +34,16 @@ var go_on_edge = function(dist)
 		a=Math.abs(brick.encoder("E1").read());
 		b=Math.abs(brick.encoder("E2").read());
 		c=Math.abs(brick.encoder("E3").read());
-		d=Math.abs(brick.encoder("E4").read());
-		print("A1 = " + brick.sensor("A1").readRawData());
-		print("A2 = " + brick.sensor("A2").readRawData());
+		d=Math.abs(brick.encoder("E4").read());
+		print("A1 = " + brick.sensor("A1").readRawData());
+		print("A2 = " + brick.sensor("A2").readRawData());
 		print("A4 = " + brick.sensor("A4").readRawData());
-	}
-	brick.motor("M1").powerOff();
-	brick.motor("M2").powerOff();
-	brick.motor("M3").powerOff();
+	}
+	brick.motor("M1").powerOff();
+	brick.motor("M2").powerOff();
+	brick.motor("M3").powerOff();
 	brick.motor("M4").powerOff();
-}
+}
 
 var rotate = function(ang)
 {
@@ -61,12 +61,12 @@ var rotate = function(ang)
 		b=Math.abs(brick.encoder("E2").read());
 		c=Math.abs(brick.encoder("E3").read());
 		d=Math.abs(brick.encoder("E4").read());
-	}
-	brick.motor("M1").powerOff();
-	brick.motor("M2").powerOff();
-	brick.motor("M3").powerOff();
+	}
+	brick.motor("M1").powerOff();
+	brick.motor("M2").powerOff();
+	brick.motor("M3").powerOff();
 	brick.motor("M4").powerOff();
-}
+}
 
 var go = function(dist)
 {
@@ -74,9 +74,9 @@ var go = function(dist)
 	brick.encoder("E2").reset();
 	brick.encoder("E3").reset();
 	brick.encoder("E4").reset();
-	var a=0,b=0,c=0,d=0;
+	var a=0,b=0,c=0,d=0;
 	light = brick.sensor("A6").readRawData();
-	while (Math.min(Math.min(a,b),Math.min(c,d))/180.0*pi*4/Math.sqrt(2.0)<dist && light < 600){
+	while (Math.min(Math.min(a,b),Math.min(c,d))/180.0*pi*4/Math.sqrt(2.0)<dist && light < 800){
 		light = brick.sensor("A6").readRawData();
 		brick.motor("M1").setPower(v);
 		brick.motor("M2").setPower(v);
@@ -86,30 +86,30 @@ var go = function(dist)
 		b=Math.abs(brick.encoder("E2").read());
 		c=Math.abs(brick.encoder("E3").read());
 		d=Math.abs(brick.encoder("E4").read());
-	}
-	brick.motor("M1").powerOff();
-	brick.motor("M2").powerOff();
-	brick.motor("M3").powerOff();
+	}
+	brick.motor("M1").powerOff();
+	brick.motor("M2").powerOff();
+	brick.motor("M3").powerOff();
 	brick.motor("M4").powerOff();
-}
+}
 
 var main = function()
-{
-	go(20);
-	while (true){
+{
+	go(20);
+	while (true){
 		print(brick.sensor("A4").readRawData());
-		go_on_edge(1000);
-		brick.motor("M1").setPower(100);
-		brick.motor("M2").setPower(100);
-		script.wait(300);
-		v = -90;
-		go_on_edge(5);
-		v = 90;
-		go(5);
-		v = -90;
-		rotate(90);
+		go_on_edge(1000);
+		brick.motor("M1").setPower(100);
+		brick.motor("M2").setPower(100);
+		script.wait(300);
+		v = -90;
+		go_on_edge(5);
 		v = 90;
-		script.wait(100);
+		go(5);
+		v = -90;
+		rotate(90);
+		v = 90;
+		script.wait(100);
 	}
 	return;
 }
