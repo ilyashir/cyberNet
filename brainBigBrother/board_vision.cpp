@@ -392,9 +392,9 @@ int main()
         cvCircle(frame,cvPoint(robot.left_point.x*2,robot.left_point.y*2),3,CV_RGB(255,255,0),-1);
         cvCircle(frame,cvPoint(robot.right_point.x*2,robot.right_point.y*2),3,CV_RGB(255,128,0),-1);
         int d=2000;
-        static int x=robot.center.x,y=robot.center.y;
+        static int x=robot.center.x,y=robot.center.y,x0=robot.center.x,y0=robot.center.y;
         if(PointVal(final_b,x,y,1)!=0){
-            x=robot.center.x,y=robot.center.y;
+            x=x0,y=y0;
         }
         for(int i=0;i<final_b->width;i++)
             for(int j=0;j<final_b->height;j++)
