@@ -98,7 +98,7 @@ struct Robot
         left_point=l;
         right_point=r;
         center=cvPoint((l.x+r.x)/2,(l.y+r.y)/2);
-        radius=_hypot(r.x-l.x,r.y-l.y)*1;
+        radius=_hypot(r.x-l.x,r.y-l.y)*1.3;
         ang=atan2(r.x-l.x,r.y-l.y);
     }
 };
@@ -370,7 +370,7 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
 }
 int main()
 {
-    Trik trik("10.23.47.10");
+    Trik trik("192.168.77.1");
     Robot robot;
     Comps comps_y,comps_o,comps_board;
     cout<<"W8 ";
@@ -392,13 +392,13 @@ int main()
         cvCircle(frame,cvPoint(robot.left_point.x*2,robot.left_point.y*2),3,CV_RGB(255,255,0),-1);
         cvCircle(frame,cvPoint(robot.right_point.x*2,robot.right_point.y*2),3,CV_RGB(255,128,0),-1);
         int d=2000;
-        static int x=-1,y=-1;
+        static int x=robot.center.x,y=robot.center.y;
         bool ok=true;
-        if(x==-1)
-            ok=false;
         if(ok)
-            if(PointVal(final_b,x,y,1)!=0)
+            if(PointVal(final_b,x,y,1)!=0){
                 ok=false;
+                x=robot.center.x,y=robot.center.y;
+            }
         if(!ok)
             for(int i=0;i<final_b->width;i++)
                 for(int j=0;j<final_b->height;j++)
@@ -409,7 +409,11 @@ int main()
                             x=i;
                             y=j;
                         }
-        double ang=atan2(x-robot.center.x,y-robot.center.y);
+        double ang;
+        if(x-robot.center.x==0&&y-robot.center.y==0)
+            ang==0;
+        else
+            ang=atan2(x-robot.center.x,y-robot.center.y);
         int deg=(ang-robot.ang-PI/2)/PI*180;
         int dist=_hypot(x-robot.center.x,y-robot.center.y);
         if(deg<0)
