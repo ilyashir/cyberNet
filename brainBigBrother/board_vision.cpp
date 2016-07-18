@@ -349,7 +349,7 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
     for(int i=0;i<board->width;i++)
         for(int j=0;j<board->height;j++)
     {
-        if(_hypot(i-robot.center.x,j-robot.center.y)<=robot.radius/2)
+        if(_hypot(i-robot.center.x,j-robot.center.y)<=robot.radius/4)
             cvCircle(board,cvPoint(i,j),0,CV_RGB(255,255,255));
         if(_hypot(i-robot.center.x,j-robot.center.y)<=robot.radius)
             continue;
@@ -393,22 +393,18 @@ int main()
         cvCircle(frame,cvPoint(robot.right_point.x*2,robot.right_point.y*2),3,CV_RGB(255,128,0),-1);
         int d=2000;
         static int x=robot.center.x,y=robot.center.y;
-        bool ok=true;
-        if(ok)
-            if(PointVal(final_b,x,y,1)!=0){
-                ok=false;
-                x=robot.center.x,y=robot.center.y;
-            }
-        if(!ok)
-            for(int i=0;i<final_b->width;i++)
-                for(int j=0;j<final_b->height;j++)
-                    if(PointVal(final_b,i,j,1)==0)
-                        if(_hypot(i-robot.center.x,j-robot.center.y)<d)
-                        {
-                            d=_hypot(i-robot.center.x,j-robot.center.y);
-                            x=i;
-                            y=j;
-                        }
+        if(PointVal(final_b,x,y,1)!=0){
+            x=robot.center.x,y=robot.center.y;
+        }
+        for(int i=0;i<final_b->width;i++)
+            for(int j=0;j<final_b->height;j++)
+                if(PointVal(final_b,i,j,1)==0)
+                    if(_hypot(i-robot.center.x,j-robot.center.y)<d)
+                    {
+                        d=_hypot(i-robot.center.x,j-robot.center.y);
+                        x=i;
+                        y=j;
+                    }
         double ang;
         if(x-robot.center.x==0&&y-robot.center.y==0)
             ang=robot.ang+PI/2;
