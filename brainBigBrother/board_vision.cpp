@@ -411,7 +411,7 @@ int main()
                         }
         double ang;
         if(x-robot.center.x==0&&y-robot.center.y==0)
-            ang==0;
+            ang=robot.ang+PI/2;
         else
             ang=atan2(x-robot.center.x,y-robot.center.y);
         int deg=(ang-robot.ang-PI/2)/PI*180;
