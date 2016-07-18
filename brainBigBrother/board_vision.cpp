@@ -282,8 +282,11 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
                     r=PointVal(image, p.x, p.y, 1),
                     g=PointVal(image, p.x, p.y, 2),
                     b=PointVal(image, p.x, p.y, 3),
-                    k=max(max(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2)), PointVal(image, p.x, p.y, 3));//cout<<r<<' '<<g<<' '<<k<<endl;
-                    if(r==k)
+                    k=max(max(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2)), PointVal(image, p.x, p.y, 3)),//cout<<r<<' '<<g<<' '<<k<<endl;
+                    w=min(min(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2)), PointVal(image, p.x, p.y, 3));
+                    if(k-w<k/15)
+                        ind=3;
+                    else if(r==k)
                         ind=0;
                     else if(g-r>b-g)
                         ind=1;
@@ -303,6 +306,9 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
                 case 2:
                     cvCircle(text3,p,0,CV_RGB(0,0,255));
                     //if(pow>0.98)
+                        break;
+                case 3:
+                    cvCircle(text3,p,0,CV_RGB(255,255,255));
                         break;
                 default:
                     cvCircle(text3,p,0,CV_RGB(0,0,0));
@@ -364,21 +370,16 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
 }
 int main()
 {
-    Trik trik("10.23.46.80");
+    Trik trik("10.23.47.10");
     Robot robot;
     Comps comps_y,comps_o,comps_board;
     cout<<"W8 ";
-    IplImage*  frame   = NULL;
+    IplImage*  frame = NULL;
     char c=0;
     CvCapture* capture = cvCreateCameraCapture(1);
     while(c != 13)
     {
         float fps=31;
-        /*while(fps>30)
-        {
-            int time=clock();
-            fps=1000.0/(clock()-time);
-        }*/
 
         frame = cvQueryFrame(capture);
         static IplImage* final_b = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
