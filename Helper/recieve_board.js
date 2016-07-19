@@ -28,8 +28,8 @@ var main = function()
 			if(x0>180)
 				x0 = x0 - 360;
 		}
-		if(y0<5)
-			x0=y0=0;
+		if(y0<5)
+			x0=y0=0;
 		var power = 1 * x0;
 		var base = 10 * y0;
 		if(Math.abs(x0)>15)
