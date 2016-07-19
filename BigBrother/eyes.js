@@ -1,8 +1,36 @@
 var __interpretation_started_timestamp__;
 //Perevod v santimetry
-function toSm (dist){return dist*60/1024;}
+function toSm (dist){return dist*60/1024;}
 
-var camera;//Ugol povorota camery
+var camera;//Ugol povorota camery
+
+var manip = function(){
+	brick.encoder("E1").reset();
+	brick.encoder("E3").reset();
+	while(brick.encoder('E3').read()>=-750){
+		brick.motor('M3').setPower(-100);
+		script.wait(1);
+	}
+	brick.motor('M3').setPower(0);
+	while(brick.encoder('E1').read()<=45){
+		brick.motor('M1').setPower(90);
+		script.wait(1);
+	}
+	brick.motor('M1').setPower(0);
+	brick.motor(S4).setPower(90);
+	script.wait(1000);
+	brick.motor(S4).setPower(-90);
+	script.wait(1000);
+	while(brick.encoder('E1').read()>=-45){
+		brick.motor('M1').setPower(-90);
+		script.wait(1);
+	}
+	brick.motor('M1').setPower(0);
+	while(brick.sensor('A4').read()==0){
+	brick.motor('M4').setPower(-100);
+	script.wait(1);
+	}
+}
 
 var setAng =function(osy,a){
 	//osy==1 - Left/Right
@@ -34,30 +62,20 @@ var setAng =function(osy,a){
 		} 
 	}
 }
-
-var mess(){
-	if (mailbox.hasMessages()){
-		var mes = mailbox.receive();
-		switch (mes){
-		case 1:
-			brick.motor("M4").setPower(-100);
-		break;
-		case 0:
-			brick.motor("M4").setPower(0);
-		break;
-		case 2:
-			
-		break;
-		case 3:
-			
-		break;
-		}
-	}
-}
+
+var mess = function(){
+	if (mailbox.hasMessages()){
+		var mes = mailbox.receive();
+	}
+		if (mes == 1) {
+			brick.motor("M4").setPower(-100);
+		} else if (mes ==0) {
+			brick.motor("M4").setPower(0);
+		}
+	}
 
 var main = function(){
-	__interpretation_started_timestamp__ = Date.now();
-	mailbox.connect("10.23.46.27");
+	mailbox.connect("10.23.47.113");
 	//Timer
 	var time0=0, dt=0;
 	//Startovoe polozhenie
@@ -68,8 +86,8 @@ var main = function(){
 	//Ugly po osyam
 	var aLR=0,aUD=10;
 	while(true)
-	{
-		mess();
+	{
+		mess();
 		//Schityvanie znacheny
 		var Left=brick.sensor(A5).readRawData();
 		var Right=brick.sensor(A6).readRawData();
@@ -83,12 +101,12 @@ var main = function(){
 			//Esly sleva
 			if(Lsm<Rsm)
 			{
-				if(aLR<35) aLR+=4;
+				if(aLR<35) aLR+=9;
 			}
 			//Esly sprava
 			else
 			{
-				if(aLR>-35) aLR-=4;
+				if(aLR>-35) aLR-=9;
 			}
 			time0=-1;
 		}
@@ -130,7 +148,6 @@ var main = function(){
 		brick.display().addLabel(camera,10,75);
 		brick.display().redraw();
 		script.wait(1);
-	
 	}
 	return;
 }
