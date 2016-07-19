@@ -1,5 +1,8 @@
 var pi = 3.1415926535897931;
-var end = 0, v = 90; 
+var end = 0, v = 90; 
+var i = 0;
+var sp_h = script.readAll("sp_human.txt");
+var sp_t = script.readAll("sp_trik.txt");
 
 var mouth = function(t){
 	for(var i=0;i<t;i++){
@@ -9,7 +12,7 @@ var mouth = function(t){
 	}
 }
 
-var pereb(){
+var pereb = function(){
 	for (i = 0; sp_h[i] != lines; i++){
 		if (i > 51){
 			break;
@@ -76,28 +79,29 @@ function speak(){
 	script.system("cd scripts")
 	script.removeFile("input.txt");
 	script.writeToFile("input.txt", "");
-	while (brick.keys().isPressed(KeysEnum.Left) != true){
-		script.wait(50);
-	}
-	brick.playSound("media/beep.wav");
-	script.system("arecord -d 3 pew.wav");
-	script.wait(4000);
-	brick.playSound("pew.wav");
-	script.system("curl -v -4 \"asr.yandex.net/asr_xml?key=d7059ba7-65ed-45d2-948e-bef1683250bb&uuid=12345678123456798734567812345678&topic=queries&lang=ru-RU\" -H \"Content-Type: audio/x-wav\" --data-binary \"@pew.wav\" | sed 's/.*confidence=\".*\">//' | sed 's#</.*##' | sed -n \"3p\" > input.txt");
-	var t = Date.now();
-	var dt = Date.now();
-	var r = 0;
-	while (lines == 0 && r < 15000){
-		lines = script.readAll("input.txt");
-		dt = Date.now();
-		script.wait(10);
-		r = dt - t;
-	}
-	lines = script.readAll("input.txt");
+	
+		brick.playSound("media/beep.wav");
+		script.system("arecord -d 3 pew.wav");
+		script.wait(4000);
+		//brick.playSound("pew.wav");
+		script.system("curl -v -4 \"asr.yandex.net/asr_xml?key=d7059ba7-65ed-45d2-948e-bef1683250bb&uuid=12345678123456798734567812345678&topic=queries&lang=ru-RU\" -H \"Content-Type: audio/x-wav\" --data-binary \"@pew.wav\" | sed 's/.*confidence=\".*\">//' | sed 's#</.*##' | sed -n \"3p\" > input.txt");
+		var t = Date.now();
+		var dt = Date.now();
+		var r = 0;
+		while (lines == 0 && r < 15000){
+			lines = script.readAll("input.txt");
+			dt = Date.now();
+			script.wait(10);
+			r = dt - t;
+		}
+	lines = script.readAll("input.txt");
+	
+	
+		script.wait(50);
 	return lines[0];
 }
 
-var do_(){
+var do_ = function(){
 	switch (lines) {
 		case "начни стирать\n":
 			go(2);
@@ -141,14 +145,20 @@ function say(text) {
 	mailbox.send(2,0);
 }
 
-var main = function(){
-	mailbox.connect("10.23.46.33");
-	var i = 0;
-	var sp_h = script.readAll("sp_human.txt");
-	var sp_t = script.readAll("sp_trik.txt");
-	while (true){
-		lines = speak();
-		do_();
+var main = function(){
+	x = script.random(1, 8);
+	brick.display().showImage('pict'+x+'.png');
+	mailbox.connect("10.23.47.47");
+	script.wait(1000);
+	while (true){
+		if (brick.keys().isPressed(KeysEnum.Left) == true){
+			lines = speak();
+			do_();
+		}
+		if (brick.keys().isPressed(KeysEnum.Right) == true){
+			say("меня зовут робот старший брат");
+		}
+		script.wait(100);
 	}
 	return;
 }
