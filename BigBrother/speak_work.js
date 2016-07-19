@@ -8,20 +8,20 @@ var mouth = function(t){
 		script.wait(100);
 	}
 }
-
-var pereb(){
-	for (i = 0; sp_h[i] != lines; i++){
-		if (i > 15){
-			break;
-		}
-		script.wait(10);
-	}
-	if (i > 15){
-		say('извините я вас не понял');
-	} else {
-		say(sp_t[i]);
-	}
-}
+
+var pereb(){
+	for (i = 0; sp_h[i] != lines; i++){
+		if (i > 51){
+			break;
+		}
+		script.wait(10);
+	}
+	if (i > 51){
+		say('извините я вас не понял');
+	} else {
+		say(sp_t[i]);
+	}
+}
 
 var rotate = function(ang)
 {
@@ -95,29 +95,29 @@ function speak(){
 	}
 	lines = script.readAll("input.txt");
 	return lines[0];
-}
-
-var do_(){
-	switch (lines) {
-		case "начни стирать\n":
-			go(2);
-			rotate(180);
-			var mes=1; 
-			script.sendMessage(mes);
-			script.wait(1000);
-		break;
-		case "возьми\n":
-			mailbox.send(2,2);
-		break;
-		case "отдай\n":
-			mailbox.send(2,3);
-		break;
-		default:
-			pereb();
-		break;
-	}
-}
-
+}
+
+var do_(){
+	switch (lines) {
+		case "начни стирать\n":
+			go(2);
+			rotate(180);
+			var mes=1; 
+			script.sendMessage(mes);
+			script.wait(1000);
+		break;
+		case "возьми\n":
+			mailbox.send(2,2);
+		break;
+		case "отдай\n":
+			mailbox.send(2,3);
+		break;
+		default:
+			pereb();
+		break;
+	}
+}
+
 function say(text) {
 	var fileName = "\"" + text +".wav\""
 	script.system("rm -f text.txt",true);
@@ -132,16 +132,16 @@ function say(text) {
 	script.system(". ./"+scriptFilename,true);
 	script.system("aplay " + fileName + " && echo 123 > text.txt");
 	var ttxt = script.readAll("text.txt");
-	script.wait(1000);
+	script.wait(1000);
 	mailbox.send(2,1);
 	while (ttxt == 0){
 		mouth(2);
 		ttxt = script.readAll("text.txt");
-	}
+	}
 	mailbox.send(2,0);
 }
 
-var main = function(){
+var main = function(){
 	mailbox.connect("10.23.46.33");
 	var i = 0;
 	var sp_h = script.readAll("sp_human.txt");
@@ -149,6 +149,6 @@ var main = function(){
 	while (true){
 		lines = speak();
 		do_();
-	}
+	}
 	return;
 }
