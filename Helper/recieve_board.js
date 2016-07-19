@@ -7,9 +7,9 @@ var main = function()
 	//	script.wait(10);
 	//}
 	//brick.playSound("media/beep.wav");
-	var a = 0;
-	brick.motor("S2").setPower(100);
-	brick.motor("S1").setPower(-100);
+	var a = 0;
+	brick.motor("S2").setPower(100);
+	brick.motor("S1").setPower(-100);
 	script.wait(1000);
 	while(true)
 	{
@@ -28,12 +28,12 @@ var main = function()
 			if(x0>180)
 				x0 = x0 - 360;
 		}
-		var power = 2 * x0;
+		if(y0<5)
+			x0=y0=0;
+		var power = 1 * x0;
 		var base = 10 * y0;
-		if(Math.abs(x0)>10)
-			base = 0;
-		if(y0<25)
-			x0=y0=0;
+		if(Math.abs(x0)>15)
+			base = 0;
 		brick.motor("S2").setPower( -base + power+10);
 		brick.motor("S1").setPower( base +power+10);
 	}

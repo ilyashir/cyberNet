@@ -91,7 +91,7 @@ IplImage* sameColor(IplImage* src, IplImage* dst, int numColor = 0, double k1 = 
 //Положение робота
 struct Robot
 {
-    CvPoint left_point,right_point,center;
+    CvPoint left_point,right_point,center,remover;
     double ang, radius;
     void calculate(CvPoint l, CvPoint r)
     {
@@ -99,6 +99,8 @@ struct Robot
         right_point=r;
         center=cvPoint((l.x+r.x)/2,(l.y+r.y)/2);
         radius=_hypot(r.x-l.x,r.y-l.y)*1.3;
+        remover=cvPoint(center.x-l.y+center.y,center.y+l.x-center.x);
+        center = remover;
         ang=atan2(r.x-l.x,r.y-l.y);
     }
 };
@@ -249,16 +251,16 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
     for(int i=0;i<text2->width;i++)
     {
         for(int j=0;j<text2->height&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j++)
-            cvCircle(text2,cvPoint(i,j),50,CV_RGB(255,255,255),CV_FILLED);
+            cvCircle(text2,cvPoint(i,j),5,CV_RGB(255,255,255),CV_FILLED);
         for(int j=text2->height-1;j>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;j--)
-            cvCircle(text2,cvPoint(i,j),50,CV_RGB(255,255,255),CV_FILLED);
+            cvCircle(text2,cvPoint(i,j),5,CV_RGB(255,255,255),CV_FILLED);
     }
     for(int j=0;j<text2->height;j++)
     {
-        for(int i=0;i<text2->width&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i++)
-            cvCircle(text2,cvPoint(i,j),50,CV_RGB(255,255,255),CV_FILLED);
-        for(int i=text2->width-1;i>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i--)
-            cvCircle(text2,cvPoint(i,j),50,CV_RGB(255,255,255),CV_FILLED);
+        for(int i=0;i<text2->width&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i++){
+            cvCircle(text2,cvPoint(i,j),30,CV_RGB(255,255,255),CV_FILLED);}//cvCircle(frame,cvPoint(i*2,j*2),30*2,CV_RGB(255,255,255),CV_FILLED);}
+        for(int i=text2->width-1;i>=0&&comps_board.windowArray[i][j]!=comps_board.maxComp.num;i--){
+            cvCircle(text2,cvPoint(i,j),30,CV_RGB(255,255,255),CV_FILLED);}//cvCircle(frame,cvPoint(i*2,j*2),30*2,CV_RGB(255,255,255),CV_FILLED);}
     }
 
     //Ищем желтую и оранжевую метки
@@ -284,7 +286,7 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
                     b=PointVal(image, p.x, p.y, 3),
                     k=max(max(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2)), PointVal(image, p.x, p.y, 3)),//cout<<r<<' '<<g<<' '<<k<<endl;
                     w=min(min(PointVal(image, p.x, p.y, 1), PointVal(image, p.x, p.y, 2)), PointVal(image, p.x, p.y, 3));
-                    if(k-w<k/15)
+                    if(k-w<k/12)
                         ind=3;
                     else if(r==k)
                         ind=0;
@@ -349,7 +351,7 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
     for(int i=0;i<board->width;i++)
         for(int j=0;j<board->height;j++)
     {
-        if(_hypot(i-robot.center.x,j-robot.center.y)<=robot.radius/4)
+        if(_hypot(i-robot.remover.x,j-robot.remover.y)<=robot.radius/4)
             cvCircle(board,cvPoint(i,j),0,CV_RGB(255,255,255));
         if(_hypot(i-robot.center.x,j-robot.center.y)<=robot.radius)
             continue;
@@ -370,7 +372,7 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
 }
 int main()
 {
-    Trik trik("192.168.77.1");
+    Trik trik("10.23.47.105");
     Robot robot;
     Comps comps_y,comps_o,comps_board;
     cout<<"W8 ";
@@ -388,9 +390,11 @@ int main()
 
         //Отрисовываем робота
         cvCircle(frame,cvPoint(robot.center.x*2,robot.center.y*2),robot.radius*2,CV_RGB(255,0,0));
+        cvCircle(frame,cvPoint(robot.remover.x*2,robot.remover.y*2),robot.radius/2,CV_RGB(0,0,0));
         cvCircle(frame,cvPoint(robot.center.x*2,robot.center.y*2),3,CV_RGB(255,0,0),-1);
         cvCircle(frame,cvPoint(robot.left_point.x*2,robot.left_point.y*2),3,CV_RGB(255,255,0),-1);
         cvCircle(frame,cvPoint(robot.right_point.x*2,robot.right_point.y*2),3,CV_RGB(255,128,0),-1);
+        cvCircle(frame,cvPoint(robot.remover.x*2,robot.remover.y*2),3,CV_RGB(255,0,0),-1);
         int d=2000;
         static int x=robot.center.x,y=robot.center.y,x0=robot.center.x,y0=robot.center.y;
         if(PointVal(final_b,x,y,1)!=0){
