@@ -95,21 +95,21 @@ var go = function(dist)
 
 var main = function()
 {
-	go(20);
+	while (brick.sensor("A4").readRawData() < 1023 && brick.sensor("A5").readRawData() < 1023){
+		brick.motor("M1").setPower(-100);
+		brick.motor("M2").setPower(-100);
+		brick.motor("M3").setPower(-100);
+		brick.motor("M4").setPower(-100);
+	}
 	while (true){
 		print(brick.sensor("A4").readRawData());
 		go_on_edge(1000);
-		brick.motor("M1").setPower(100);
-		brick.motor("M2").setPower(100);
+		
 		script.wait(300);
 		v = -90;
-		go_on_edge(5);
+		go_on_edge(1000);
 		v = 90;
-		go(5);
-		v = -90;
-		rotate(90);
-		v = 90;
-		script.wait(100);
+		
 	}
 	return;
 }
