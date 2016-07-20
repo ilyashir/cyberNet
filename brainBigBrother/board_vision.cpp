@@ -401,8 +401,6 @@ int main()
         brother.sendmsg(0,0);
     while(r!=4){
         r = brother.recievemsg(1);
-        cout<<r<<' '<<brother.buf<<endl;
-        //cout<<brother.buf<<endl;
         if(!brother.active){
             cout<<"\nBrazzer not fukken connectd";
             break;

@@ -17,6 +17,7 @@ private:
     sockaddr_in addr_out;
     sockaddr_in addr_in;
     char *buf;
+
 public:
     bool active;
     //Конструктор
@@ -66,7 +67,7 @@ public:
         flag=false;
     }
     //Отправить обе строки
-    void sendmsg(int* val)
+    void sendmsg(unsigned int* val)
     {
         string pad0="pad 0 "+SSTR(val[0])+" "+SSTR(val[1])+"\n";
         string pad1="pad 1 "+SSTR(val[2])+" "+SSTR(val[3])+"\n";
@@ -76,25 +77,26 @@ public:
             sendto(s_out,&pad1[0],pad1.size(),0,(SOCKADDR *) & addr_out, sizeof (addr_out));
         }
     }
-    int recievemsg(int len)
+    int recievemsg(unsigned int len)
     {
         //Проверяем соединение
         if(!active||len>100)
             return -1;
         //Получаем строку
-        int n=recv(s_in, buf, (size_t)(len+(len>10?9:10)), 0),l=0,v=0;
-        //Проверяем не корректность
-        if(buf[1]==':')
-            if(n!=buf[0]-'0'+3)
+        int n=recv(s_in, buf, (size_t)(len+((len+7)>9?10:9)), 0),l=0,v=0;
+        //Проверяем на корректность
+        if(buf[1]==':'){
+            if(n!=buf[0]-'0'+2||len!=buf[0]-'0'-7)
                 return -2;
-        else;else if(buf[2]==':')
-            if(n!=buf[0]*10+buf[1]-'0'*11+3)
+        }
+        else if(buf[2]==':')
+            if(n!=buf[0]*10+buf[1]-'0'*11+3||len!=buf[0]*10+buf[1]-'0'*11-7)
                 return -2;
         else; else return -2;
         //Парсим
-        if(string(buf).substr(n-3>9?2:1,8)!=":print: ")
+        if(string(buf).substr(n-len-8,8)!=":print: ")
             return -1;
-        for(int i=0;i<BUFF&&buf[i]!=':';i++)
+        for(int i=0;i<n&&buf[i]!=':';i++)
             l=l*10+buf[i]-'0';
         for(int i=(n-l)+7;i<n;i++)
             v=v*10+buf[i]-'0';
@@ -102,9 +104,9 @@ public:
 		return v;
     }
     //Дополнительно для удобства
-    void sendmsg(int a, int b=0, int c=0, int d=0)
+    void sendmsg(unsigned int a, unsigned int b=0, unsigned int c=0, unsigned int d=0)
     {
-        int vals[4]={a,b,c,d};
+        unsigned int vals[4]={a,b,c,d};
         sendmsg(vals);
         delete [] vals;
     }
