@@ -372,18 +372,69 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
 }
 int main()
 {
-    Trik trik("10.23.47.105");
+    cout<<"Connetctin' helper ...";
+    Trik helper("10.23.47.105");
+    if(helper.active)
+    {
+        cout<<"\nHelper connected";
+    }
+    else
+    {
+        cout<<"\nHelper not connected";
+    }
+    cout<<"\nConnectin' brother";
+    Trik brother("10.23.47.134");
     Robot robot;
     Comps comps_y,comps_o,comps_board;
-    cout<<"W8 ";
     IplImage*  frame = NULL;
+    int r=0;
+    CvCapture* capture = cvCaptureFromFile("http://10.23.47.30:8080/?action=streaming.mjpg");
+    if(capture == NULL)
+    {
+        cout<<"\nCamera not working";
+    }
+    else
+    {
+        cout<<"\nCamera connected";
+    }
+    if(brother.active)
+        brother.sendmsg(0,0);
+    while(r!=4){
+        r = brother.recievemsg(1);
+        if(!brother.active){
+            cout<<"\nBrazzer not fukken connectd";
+            break;
+        }
+        else
+        {
+
+            static bool a=true;
+            if(a)
+            {
+                cout<<"\nThe Big Brother is watching us";
+
+                a=false;
+            }
+        }
+    }
+    if(brother.active)
+        brother.sendmsg(4);
+    if(capture == 0)
+    {
+        cout<<"\nEverything is bad. Shutting down\n";
+        return 0;
+    }
+    cout<<"\nStartin' program";
     char c=0;
-    CvCapture* capture = cvCreateCameraCapture(1);
     while(c != 13)
     {
         float fps=31;
-
-        frame = cvQueryFrame(capture);
+        while(fps>30)
+        {
+            int t=clock();
+            frame = cvQueryFrame(capture);
+            fps = 1000.0/(clock()-t);
+        }
         static IplImage* final_b = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,1);
         ProcessBoard(frame,final_b,comps_o,comps_y,comps_board,robot);
 
@@ -421,15 +472,18 @@ int main()
         cvLine(frame,cvPoint(x*scale,y*scale),cvPoint(robot.center.x*scale,robot.center.y*scale),CV_RGB(255,0,255),2);
         cvShowImage("frame",frame);
         cvShowImage("final",final_b);
-        system("cls");
-        cout<<(deg>180?deg-360:deg)<<' '<<dist<<endl;
-        if(!trik.active)
-        {
-            cout<<"Warn: not transmitting";
-        }
-        trik.sendmsg(deg,dist);
+        //system("cls");
+        //cout<<(deg>180?deg-360:deg)<<' '<<dist<<endl;
+        helper.sendmsg(deg,dist);
         c=cvWaitKey(1);
+        if(brother.recievemsg(1)==7)
+            c=13;
 
+    }
+    if(brother.active)
+    {
+        cout<<"\nBrother tired. Let's go sleep\n";
+        brother.sendmsg(7);
     }
     cvReleaseCapture(&capture);
 
