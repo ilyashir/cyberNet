@@ -5,31 +5,35 @@ function toSm (dist){return dist*60/1024;}
 var camera;//Ugol povorota camery
 
 var manip = function(){
-	brick.encoder("E1").reset();
-	brick.encoder("E3").reset();
-	while(brick.encoder('E3').read()>=-750){
-		brick.motor('M3').setPower(-100);
-		script.wait(1);
-	}
-	brick.motor('M3').setPower(0);
-	while(brick.encoder('E1').read()<=45){
-		brick.motor('M1').setPower(90);
-		script.wait(1);
-	}
-	brick.motor('M1').setPower(0);
-	brick.motor(S4).setPower(90);
-	script.wait(1000);
-	brick.motor(S4).setPower(-90);
-	script.wait(1000);
-	while(brick.encoder('E1').read()>=-45){
-		brick.motor('M1').setPower(-90);
-		script.wait(1);
-	}
-	brick.motor('M1').setPower(0);
-	while(brick.sensor('A4').read()==0){
-	brick.motor('M4').setPower(-100);
-	script.wait(1);
-	}
+	brick.encoder("E1").reset();
+	brick.encoder("E3").reset();
+	while(brick.encoder('E3').read()>=-750){
+		brick.motor('M3').setPower(-100);
+		script.wait(1);
+	}
+	brick.motor('M3').setPower(0);
+	while(brick.encoder('E1').read()<=45){
+		brick.motor('M1').setPower(100);
+		script.wait(1);
+	}
+	brick.motor('M1').setPower(0);
+	script.wait(1000);
+	brick.motor('M1').setPower(0);
+	brick.motor(S4).setPower(90);
+	script.wait(1000);
+	brick.motor(S4).setPower(-90);
+	script.wait(1000);
+	while(brick.encoder('E1').read()>=-25){
+		brick.motor('M1').setPower(-100);
+		script.wait(1);
+	}
+	brick.motor('M1').setPower(0);
+	script.wait(1000);
+	brick.motor('M1').setPower(0);
+	while(brick.sensor('A3').read()==0){
+		brick.motor('M3').setPower(100);
+		script.wait(1);
+	}
 }
 
 var setAng =function(osy,a){
@@ -71,6 +75,8 @@ var mess = function(){
 			brick.motor("M4").setPower(-100);
 		} else if (mes ==0) {
 			brick.motor("M4").setPower(0);
+		} else if(mes == 2 || mes == 3){
+			manip();
 		}
 	}
 
