@@ -58,22 +58,9 @@ IplImage* sameColor(IplImage* src, IplImage* dst, int numColor = 0, double k1 = 
         for(int y = 0; y < src->height; y++)
         {
             float similar = color1IsColor2(CV_RGB(PointVal(src, x, y, 1), PointVal(src, x, y, 2), PointVal(src, x, y, 3)), color);
-            //float light1 = ((int)color.val[2]+color.val[1]+color.val[0])/3.0;
-            //float light2 = ((int)PointVal(src, x, y, 1) + PointVal(src, x, y, 2) + PointVal(src, x, y, 3))/3.0;
-            /*int vr = color.val[2] - PointVal(src, x, y, 1);
-            int vg = color.val[1] - PointVal(src, x, y, 2);
-            int vb = color.val[0] - PointVal(src, x, y, 3);
-
-            double dist = sqrt(vr*vr+vg*vg+vb*vb);*/
 
             if(similar > k1)
             {
-                //if(numColor == 0&&y>src->height/2)
-                //    cout<<color.val[0]<<'-'<<(int)PointVal(src, x, y, 1)<<' '<<color.val[1]<<'-'<<(int)PointVal(src, x, y, 2)<<' '<<color.val[2]<<'-'<<(int)PointVal(src, x, y, 3)<<' '<<similar<<endl;
-
-                //PointVal(dst, x, y, 3) = PointVal(src, x, y, 3);//0;
-                //PointVal(dst, x, y, 2) = PointVal(src, x, y, 2);//0;
-                //PointVal(dst, x, y, 1) = PointVal(src, x, y, 1);//0;
                 PointVal(dst, x, y, 2) = 255;//PointVal(src, x, y, 1);
                 PointVal(dst, x, y, 3) = 255;//PointVal(src, x, y, 1);
                 PointVal(dst, x, y, 1) = 255;//(255 * 6 + PointVal(src, x, y, 1) * 4) / 10;
@@ -197,6 +184,7 @@ struct Comps
         }
     }
 };
+//Обработка изображения доски
 void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& comps_y, Comps& comps_board, Robot& robot)
 {
     static IplImage* image = cvCreateImage(cvSize(frame->width/scale,frame->height/scale),IPL_DEPTH_8U,3);
@@ -366,14 +354,17 @@ void ProcessBoard(IplImage* frame, IplImage* final_b, Comps& comps_o, Comps& com
     }
     cvThreshold(board,text5,50,255,CV_THRESH_BINARY);
     cvConvertImage(text5,final_b);
-    cvShowImage("yellow",yellow);
-    cvShowImage("orange",orange);
     cvThreshold(final_b,final_b,254,255,CV_THRESH_BINARY);
+    cvShowImage("y",yellow);
+    cvShowImage("o",orange);
 }
 int main()
 {
-    cout<<"Connetctin' helper ...";
-    Trik helper("10.23.47.105");
+    ifstream ip("ip.txt");
+    string helper_s,brother_s,cam;
+    ip>>helper_s>>brother_s>>cam;
+    cout<<"Connectin' helper ...";
+    Trik helper(helper_s);
     if(helper.active)
     {
         cout<<"\nHelper connected";
@@ -382,21 +373,12 @@ int main()
     {
         cout<<"\nHelper not connected";
     }
-    cout<<"\nConnectin' brother";
-    Trik brother("10.23.47.134");
+    cout<<"\nConnectin' brother ...";
+    Trik brother(brother_s);
     Robot robot;
     Comps comps_y,comps_o,comps_board;
     IplImage*  frame = NULL;
     int r=0;
-    CvCapture* capture = cvCaptureFromFile("http://10.23.47.30:8080/?action=streaming.mjpg");
-    if(capture == NULL)
-    {
-        cout<<"\nCamera not working";
-    }
-    else
-    {
-        cout<<"\nCamera connected";
-    }
     if(brother.active)
         brother.sendmsg(0,0);
     while(r!=4){
@@ -419,12 +401,24 @@ int main()
     }
     if(brother.active)
         brother.sendmsg(4);
+
+    string url = "http://" + cam + ":8080/?action=streaming.mjpg";
+    cout<<"\nStartin' program";
+    CvCapture* capture = cvCaptureFromFile(url.c_str());
+    if(capture == NULL)
+    {
+        cout<<"\nCamera not working";
+    }
+    else
+    {
+        cout<<"\nCamera connected";
+    }
+
     if(capture == 0)
     {
         cout<<"\nEverything is bad. Shutting down\n";
         return 0;
     }
-    cout<<"\nStartin' program";
     char c=0;
     bool emerg=false;
     while(c != 13)
@@ -441,12 +435,12 @@ int main()
 
 
         //Отрисовываем робота
-        cvCircle(frame,cvPoint(robot.center.x*2,robot.center.y*2),robot.radius*2,CV_RGB(255,0,0));
-        cvCircle(frame,cvPoint(robot.remover.x*2,robot.remover.y*2),robot.radius/2,CV_RGB(0,0,0));
-        cvCircle(frame,cvPoint(robot.center.x*2,robot.center.y*2),3,CV_RGB(255,0,0),-1);
-        cvCircle(frame,cvPoint(robot.left_point.x*2,robot.left_point.y*2),3,CV_RGB(255,255,0),-1);
-        cvCircle(frame,cvPoint(robot.right_point.x*2,robot.right_point.y*2),3,CV_RGB(255,128,0),-1);
-        cvCircle(frame,cvPoint(robot.remover.x*2,robot.remover.y*2),3,CV_RGB(255,0,0),-1);
+        cvCircle(frame,cvPoint(robot.center.x*scale,robot.center.y*scale),robot.radius*2,CV_RGB(255,0,0));
+        cvCircle(frame,cvPoint(robot.remover.x*scale,robot.remover.y*scale),robot.radius/2,CV_RGB(0,0,0));
+        cvCircle(frame,cvPoint(robot.center.x*scale,robot.center.y*scale),3,CV_RGB(255,0,0),-1);
+        cvCircle(frame,cvPoint(robot.left_point.x*scale,robot.left_point.y*scale),3,CV_RGB(255,255,0),-1);
+        cvCircle(frame,cvPoint(robot.right_point.x*scale,robot.right_point.y*scale),3,CV_RGB(255,128,0),-1);
+        cvCircle(frame,cvPoint(robot.remover.x*scale,robot.remover.y*scale),3,CV_RGB(255,0,0),-1);
         int d=2000;
         static int x=robot.center.x,y=robot.center.y,x0=robot.center.x,y0=robot.center.y;
         if(PointVal(final_b,x,y,1)!=0){

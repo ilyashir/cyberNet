@@ -162,7 +162,7 @@ int main()
 
     return 0;*/
 
-    CvCapture* capture = cvCreateCameraCapture(1);//cvCaptureFromFile("http://10.23.46.61:8080/?action=streaming.mjpg");
+    CvCapture* capture = cvCaptureFromFile("http://10.23.46.252:8080/?action=streaming.mjpg");
     IplImage*  frame   = NULL;
 
     IplImage* flags = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 3);
