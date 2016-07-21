@@ -15,7 +15,7 @@ using namespace std;
 #define PointVal(image, x, y, channel) (*getCvPixelPtr(image, x, y, channel))
 
 const double PI = 3.1415926535897932384626433832795;
-const int scale=2;
+const int scale=1;
 
 //Получение значений пикселей
 unsigned char* getCvPixelPtr(IplImage* image, int x, int y, int channel)
@@ -426,6 +426,7 @@ int main()
     }
     cout<<"\nStartin' program";
     char c=0;
+    bool emerg=false;
     while(c != 13)
     {
         float fps=31;
@@ -449,7 +450,8 @@ int main()
         int d=2000;
         static int x=robot.center.x,y=robot.center.y,x0=robot.center.x,y0=robot.center.y;
         if(PointVal(final_b,x,y,1)!=0){
-            x=x0,y=y0;
+            x=x0;
+            y=y0;
         }
         for(int i=0;i<final_b->width;i++)
             for(int j=0;j<final_b->height;j++)
@@ -460,6 +462,11 @@ int main()
                         x=i;
                         y=j;
                     }
+        if(emerg)
+        {
+            x=x0;
+            y=y0;
+        }
         double ang;
         if(x-robot.center.x==0&&y-robot.center.y==0)
             ang=robot.ang+PI/2;
@@ -476,14 +483,24 @@ int main()
         //cout<<(deg>180?deg-360:deg)<<' '<<dist<<endl;
         helper.sendmsg(deg,dist);
         c=cvWaitKey(1);
-        if(brother.recievemsg(1)==7)
-            c=13;
-
+        if(brother.recievemsg(1)==7){
+            brother.sendmsg(7);
+            emerg=true;
+        }
+        if(dist<8&&x0==x&&y0==y)
+        {
+            helper.sendmsg(0,0);
+            break;
+        }
     }
     if(brother.active)
     {
         cout<<"\nBrother tired. Let's go sleep\n";
-        brother.sendmsg(7);
+        brother.sendmsg(9);
+    }
+    else
+    {
+        cout<<"It was an amazing useless work. Now fuk off.\n";
     }
     cvReleaseCapture(&capture);
 
