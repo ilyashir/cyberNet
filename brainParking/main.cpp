@@ -20,59 +20,59 @@ int* getAvailablePlaces(IplImage *image){
 	int y;
 	int k;
 	int l;
-	int *arr = new int[16];//массив для отображения доступных мест: 1 -- доступно, 0 -- занято
+	int *arr = new int[16];//РјР°СЃСЃРёРІ РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РґРѕСЃС‚СѓРїРЅС‹С… РјРµСЃС‚: 1 -- СЃРІРѕР±РѕРґРЅРѕ, 0 -- Р·Р°РЅСЏС‚Рѕ
 	for(int i = 0; i<16; i++){
 		arr[i] = 0;
 	}
 	for(CvSeq *seq = contours; seq != 0; seq = seq->h_next){
 		s = cvContourArea(seq);
 		p = cvArcLength(seq);
-		if(abs(p*p/s) < 4*3.14 + 2 && s > 90){//для каждого контура определяем, является ли он окружностью нужного размера
-			rect = cvBoundingRect(seq);//находим координаты центра подошедшего контура
+		if(abs(p*p/s) < 4*3.14 + 2 && s > 90){//РґР»СЏ РєР°Р¶РґРѕРіРѕ РєРѕРЅС‚СѓСЂР° РѕРїСЂРµРґРµР»СЏРµРј, СЏРІР»СЏРµС‚СЃСЏ Р»Рё РѕРЅ РѕРєСЂСѓР¶РЅРѕСЃС‚СЊСЋ РЅСѓР¶РЅРѕРіРѕ СЂР°Р·РјРµСЂР°
+			rect = cvBoundingRect(seq);//РЅР°С…РѕРґРёРј РєРѕРѕСЂРґРёРЅР°С‚С‹ С†РµРЅС‚СЂР° РїРѕРґРѕС€РµРґС€РµРіРѕ РєРѕРЅС‚СѓСЂР°
 			x = rect.x + rect.width/2;
 			y = rect.y + rect.height/2;
 			k = (x<130)?0:((x<170)?1:((x<345)?2:3));
 			l = (y>160)?0:((y>120)?1:((y>80)?2:3));
-			arr[k*4 + l] = 1;//отмечаем место с такими координатами как свободное
+			arr[k*4 + l] = 1;//РѕС‚РјРµС‡Р°РµРј РјРµСЃС‚Рѕ СЃ С‚Р°РєРёРјРё РєРѕРѕСЂРґРёРЅР°С‚Р°РјРё РєР°Рє СЃРІРѕР±РѕРґРЅРѕРµ
 		}
 	}
 	return arr;
 }
 
 int getBestPlace(int *arr){
-	int brr[] = {7, 5, 4, 3, 15, 13, 11, 9, 16, 14, 12, 10, 8, 6, 2, 1};//массив приоритетности мест
+	int brr[] = {7, 5, 4, 3, 15, 13, 11, 9, 16, 14, 12, 10, 8, 6, 2, 1};//РјР°СЃСЃРёРІ РїСЂРёРѕСЂРёС‚РµС‚РЅРѕСЃС‚Рё РјРµСЃС‚
 	int max = 0;
 	int index = -1;
-	for(int i = 0; i<16; i++){//находим номер наиболее приоритетного из свободных мест
+	for(int i = 0; i<16; i++){//РЅР°С…РѕРґРёРј РЅРѕРјРµСЂ РЅР°РёР±РѕР»РµРµ РїСЂРёРѕСЂРёС‚РµС‚РЅРѕРіРѕ РёР· СЃРІРѕР±РѕРґРЅС‹С… РјРµСЃС‚
 		if(arr[i]*brr[i] > max){
 			max = arr[i]*brr[i];
 			index = i;
 		}
 	}
-	return index + 1;//нумерация мест на парковке начинается с единицы
+	return index + 1;//РЅСѓРјРµСЂР°С†РёСЏ РјРµСЃС‚ РЅР° РїР°СЂРєРѕРІРєРµ РЅР°С‡РёРЅР°РµС‚СЃСЏ СЃ РµРґРёРЅРёС†С‹, РµСЃР»Рё СЃРІРѕР±РѕРґРЅС‹С… РјРµСЃС‚ РЅРµС‚, РІРѕР·РІСЂР°С‰Р°РµРј РЅРѕР»СЊ
 }
 
 void sendAnswer(SOCKET sct, int place){
 	char *c = new char;
 	itoa(place, c, 10);
-	std::string s = "pad 0 " + (std::string)c + " 0\n";//перевод номера места в формат, доступный для принятия ТРИКом
+	std::string s = "pad 0 " + (std::string)c + " 0\n";//РїРµСЂРµРІРѕРґ РЅРѕРјРµСЂР° РјРµСЃС‚Р° РІ С„РѕСЂРјР°С‚, РґРѕСЃС‚СѓРїРЅС‹Р№ РґР»СЏ РїСЂРёРЅСЏС‚РёСЏ РўР РРљРѕРј
     send(sct, &s[0], s.size(), 0);
 }
 
 int main(){
-	//подключенные автомобили
+	//РїРѕРґРєР»СЋС‡РµРЅРЅС‹Рµ Р°РІС‚РѕРјРѕР±РёР»Рё
 	int num = 2;
 	char* ip[] = {"192.168.77.202", "192.168.77.204"};
 
-	//получение сокетов
+	//РїРѕР»СѓС‡РµРЅРёРµ СЃРѕРєРµС‚РѕРІ
 	WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
 	int port_in = 8888;
 	int port_out = 4444;
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
-	SOCKET *sct_in = new SOCKET[num];//сокеты для получения запросов с каждой машины
-	SOCKET *sct_out = new SOCKET[num];//сокеты для отправки сообщений каждой из машин
+	SOCKET *sct_in = new SOCKET[num];//СЃРѕРєРµС‚С‹ РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ Р·Р°РїСЂРѕСЃРѕРІ СЃ РєР°Р¶РґРѕР№ РјР°С€РёРЅС‹
+	SOCKET *sct_out = new SOCKET[num];//СЃРѕРєРµС‚С‹ РґР»СЏ РѕС‚РїСЂР°РІРєРё СЃРѕРѕР±С‰РµРЅРёР№ РєР°Р¶РґРѕР№ РёР· РјР°С€РёРЅ
 	for(int i = 0; i<num; i++){
 		addr.sin_addr.s_addr = inet_addr(ip[i]);
 		addr.sin_port = htons(port_in);
@@ -82,16 +82,16 @@ int main(){
 		sct_out[i] = socket(AF_INET, SOCK_STREAM, 0);
 		connect(sct_out[i], (SOCKADDR *) &addr, sizeof(addr));
 	}
-	SOCKET sct_gate = socket(AF_INET, SOCK_STREAM, 0);//сокет для подключения к шлагбауму
+	SOCKET sct_gate = socket(AF_INET, SOCK_STREAM, 0);//СЃРѕРєРµС‚ РґР»СЏ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє С€Р»Р°РіР±Р°СѓРјСѓ
 	addr.sin_addr.s_addr = inet_addr("192.168.77.1");
 	addr.sin_port = htons(port_out);
 	connect(sct_gate, (SOCKADDR *) &addr, sizeof(addr));
 	
 	char *buf = new char[11];
-	char *s = "9:keepalive";//сообщение, приходящее от ТРИКа в течение всего времени соединения
+	char *s = "9:keepalive";//СЃРѕРѕР±С‰РµРЅРёРµ, Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РїРѕСЃС‹Р»Р°РµРјРѕРµ РўР РРљРѕРј РІ С‚РµС‡РµРЅРёРµ РІСЃРµРіРѕ РІСЂРµРјРµРЅРё СЃРѕРµРґРёРЅРµРЅРёСЏ
 	int n = 0;
 
-	//получение изображения
+	//РїРѕР»СѓС‡РµРЅРёРµ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ
 	CvCapture *capture = cvCreateFileCapture("http://192.168.77.1:8080/?action=stream.mjpg");
 	assert(capture);
 	cvNamedWindow("capture", CV_WINDOW_AUTOSIZE);
@@ -101,11 +101,11 @@ int main(){
 	long t;
 	while(true){
 		t = clock();
-		while(clock() - t < 1000.0/fps){//получаем последнее из пришедших изображений
+		while(clock() - t < 1000.0/fps){//РїРѕР»СѓС‡Р°РµРј РїРѕСЃР»РµРґРЅРµРµ РёР· РїСЂРёС€РµРґС€РёС… РёР·РѕР±СЂР°Р¶РµРЅРёР№
 			t = clock();
 			frame = cvQueryFrame(capture);
 		}
-		image = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);//предобработка
+		image = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);//РїСЂРµРґРѕР±СЂР°Р±РѕС‚РєР°
 		cvConvertImage(frame, image, CV_YUV2BGR);
 		cvConvertImage(image, image, CV_BGR2GRAY);
 		save(image, clock());
@@ -113,7 +113,7 @@ int main(){
 		cvThreshold(image, image, 120, 255, CV_THRESH_BINARY);
 		cvErode(image, image);
 		cvShowImage("capture", image);
-		/* проверка на новые сообщения */
+		/* РїСЂРѕРІРµСЂРєР° РЅР° РЅРѕРІС‹Рµ СЃРѕРѕР±С‰РµРЅРёСЏ */
 		for(int i = 0; i<num; i++){
 			n = recv(sct_in[i], buf, 11, 0);
 			if(n == -1){
@@ -121,7 +121,7 @@ int main(){
 				break;
 			}
 			for(int j = 0; j<n; j++){
-				if(buf[j] != s[j]){//если пришедшее сообщение отлично от приходящего по умолчанию
+				if(buf[j] != s[j]){//РµСЃР»Рё РїСЂРёС€РµРґС€РµРµ СЃРѕРѕР±С‰РµРЅРёРµ РѕС‚Р»РёС‡РЅРѕ РѕС‚ РїСЂРёС…РѕРґСЏС‰РµРіРѕ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
 					for(int k = 0; k<n; k++){
 						std::cout << buf[k];
 					}
@@ -134,7 +134,7 @@ int main(){
 				}
 			}
 		}
-		/* проверка на новые сообщения */
+		/* РїСЂРѕРІРµСЂРєР° РЅР° РЅРѕРІС‹Рµ СЃРѕРѕР±С‰РµРЅРёСЏ */
  		if(cvWaitKey(50) == 32){
 			break;
 		}
@@ -142,7 +142,7 @@ int main(){
 	cvReleaseCapture(&capture);
 	cvDestroyWindow("capture");
 
-	//закрытие сокетов
+	//Р·Р°РєСЂС‹С‚РёРµ СЃРѕРєРµС‚РѕРІ
 	for(int i = 0; i<num; i++){
 		closesocket(sct_in[i]);
 		closesocket(sct_out[i]);
