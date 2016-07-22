@@ -1,0 +1,148 @@
+var R = 2.6,B = 25.0;// радиус колеса и  рассто€ние меж противолежащтми колЄсами
+var pi = 3.1415926535897931;
+var width = 1, lenght = 5;// width  - ширина области уборки, lenght -  длина области уборки
+var stop = function()//остановка моторов
+{
+	brick.motor(M1).setPower(0);
+	brick.motor(M2).setPower(0);
+	brick.motor(M3).setPower(0);
+	brick.motor(M4).setPower(0);
+	return;
+}
+var reset = function()//обнуление энкодеров
+{
+	brick.encoder(E1).reset();
+	brick.encoder(E2).reset();
+	brick.encoder(E3).reset();
+	brick.encoder(E4).reset();
+	return;
+}
+var rotation = function(dig)// поворот на заданный угол(в градусах)
+{
+	var rot = 0;// текущий угол поворота
+	reset();
+	while(Math.abs(rot) < Math.abs(dig))// робот поворачивает, пока текущий угол поворота меньше необходимого
+	{
+		if(dig > 0)// если угол положительный поворачивает по часовой стрелке
+		{
+			brick.motor(M1).setPower(-100);
+			brick.motor(M2).setPower(100);
+			brick.motor(M3).setPower(-100);
+			brick.motor(M4).setPower(100);
+		}
+		else// если угол отрицательный поворачивает против часовой стрелки
+		{
+			brick.motor(M1).setPower(100);
+			brick.motor(M2).setPower(-100);
+			brick.motor(M3).setPower(100);
+			brick.motor(M4).setPower(-100);
+		}
+		script.wait(2);// задержка
+		rot = 4 * (brick.encoder(E2).read()  + brick.encoder(E4).read() - brick.encoder(E1).read() - brick.encoder(E3).read()) * pi * R / B / B;//определение текущего угла поворота
+	}
+	stop();//остановка моторов
+	return;
+}
+var home = function()//возвращение на базу
+{
+	while(brick.objectSensor("video1").read()[2] < 30  || brick.sensor(A3).read() > 10) // алгоритм возвращени€ действует, пока изображение предмета не станет достаточно большим, а рассто€ние до него достаточно маленьким
+	{
+		if(brick.objectSensor("video1").read()[2] == 0)// разворот к объекту, если его не видно
+		{
+			while(Math.abs(brick.objectSensor("video1").read()[1]) > 40 || brick.objectSensor("video1").read()[2] < 1)// разворот, пока не увидит объект
+			{
+				brick.motor('M1').setPower(-80);
+				brick.motor('M2').setPower(80);
+				brick.motor('M3').setPower(-80);
+				brick.motor('M4').setPower(80);
+			}
+			stop();// остановка моторов
+			script.wait(100); 
+		}
+		script.wait(1); 
+		x = 0;
+		x = (brick.objectSensor("video1").read()[1] + 0) * 2;// определение управл€ющего воздейсви€ дл€ разворота, зависит от координаты x объекта
+		if(x > 90) x =90;
+		if(x < -90) x =-90;
+		brick.motor(M1).setPower(-95); 
+		brick.motor(M4).setPower(-95); 
+		brick.motor(M2).setPower(-x); 
+		brick.motor(M3).setPower(x); 
+
+	} 
+	stop();
+	var a1 = brick.sensor("A2").read();
+	while(a1 >= brick.sensor("A2").read() || brick.sensor("A2").read() > 20)// разворот по часовой, пока показани€ левостороннего датчика рассто€ни€ не начнут расти
+	{
+		a1 = brick.sensor("A2").read();
+		brick.motor(M1).setPower(-90);
+		brick.motor(M2).setPower(90);
+		brick.motor(M3).setPower(-90);
+		brick.motor(M4).setPower(90);
+		script.wait(5);
+	}
+	stop();//остановка моторов
+	rotation(60);
+	return;
+}
+var main = function()
+{
+	mailbox.connect("192.168.77.204");
+	brick.configure("video1", "objectSensor");// конфигураци€ камеры
+	brick.objectSensor("video1").init(true);// инициализаци€ камерыЅ начало трансл€ции изображени€
+	while (!brick.keys().wasPressed(KeysEnum.Left))// ожидание нажати€ кнопки  дл€ определени€ цвета объекта
+ 	{
+		script.wait(100);
+	}
+	brick.objectSensor("video1").detect();//определени€ цвета объекта
+	mailbox.receive();// ожидание команды начала работы
+	script.wait(1000);
+	reset();//обнуление энкодеров
+	while((brick.encoder(E1).read() + brick.encoder(E4).read() + Math.abs(brick.encoder(E1).read() - brick.encoder(E4).read()))* pi * R /360.0  >  -70)
+	{
+		brick.motor(M1).setPower(-100);
+		brick.motor(M4).setPower(-100);
+		if(brick.encoder(E1).read() < brick.encoder(E4).read()) brick.motor(M1).setPower(-100 + (brick.encoder(E4).read() - brick.encoder(E1).read())*2);
+		if(brick.encoder(E4).read()< brick.encoder(E1).read()) brick.motor(M4).setPower(-100 + (brick.encoder(E1).read() - brick.encoder(E4).read())*2);
+		script.wait(15);
+	}
+	stop();//остановка моторов
+	if(width > lenght)rotation(90);
+	brick.motor(S2).setPower(90);// запуск механизма уборки
+	for(var i = 0; i < Math.min(lenght,width); i++)
+	{
+		for(var j = 0; j < Math.max(lenght,width); j++)
+		{
+			reset();//обнуление энкодеров
+			while((brick.encoder(E1).read() + brick.encoder(E4).read() + Math.abs(brick.encoder(E1).read() - brick.encoder(E4).read()))* pi * R /360.0  >  -B/2)
+			{
+				brick.motor(M1).setPower(-100);
+				brick.motor(M4).setPower(-95);
+				if(brick.encoder(E1).read() < brick.encoder(E4).read()) brick.motor(M1).setPower(-100 + (brick.encoder(E4).read() - brick.encoder(E1).read())*2);
+				if(brick.encoder(E4).read()< brick.encoder(E1).read()) brick.motor(M4).setPower(-95 + (brick.encoder(E1).read() - brick.encoder(E4).read())*2);
+				script.wait(15);
+			}
+			stop();
+			script.wait(2000);
+		}
+		if(i == Math.min(lenght,width) - 1)break;
+		if(i % 2 == 0)rotation(-90);
+		else rotation(90);
+		reset();//обнуление энкодеров
+		while((brick.encoder(E1).read() + brick.encoder(E4).read() + Math.abs(brick.encoder(E1).read() - brick.encoder(E4).read()))* pi * R /360.0  >  -B/2)
+		{
+			brick.motor(M1).setPower(-100);
+			brick.motor(M4).setPower(-100);
+			if(brick.encoder(E1).read() < brick.encoder(E4).read()) brick.motor(M1).setPower(-100 + (brick.encoder(E4).read() - brick.encoder(E1).read())*2);
+			if(brick.encoder(E4).read()< brick.encoder(E1).read()) brick.motor(M4).setPower(-95 + (brick.encoder(E1).read() - brick.encoder(E4).read())*2);
+			script.wait(15);
+		}
+		stop();
+		if(i % 2 == 0)rotation(-90);
+		else rotation(90);
+		script.wait(2000);
+	}
+	brick.motor(S2).setPower(10);// остановка механизма уборки
+	home();//возвращение на базу
+	return;
+}
