@@ -146,21 +146,115 @@ function speak(){
 	script.wait(50);
 	return lines[0];
 }
+
+var Helper = function(){
+		while (brick.sensor("A4").readRawData() < 1023 && brick.sensor("A5").readRawData() < 1023){
+		brick.motor("M1").setPower(-100);
+		brick.motor("M2").setPower(-100);
+		brick.motor("M3").setPower(-100);
+		brick.motor("M4").setPower(-100);
+	}
+	v = -90;
+	go_on_edge(1000);
+	v = 90;
+	go_on_edge(5);
+	var t = script.time();
+	while (script.time() - t < 500){
+		brick.motor("M1").setPower(100);
+		brick.motor("M2").setPower(100);
+		brick.motor("M3").setPower(100);
+		brick.motor("M4").setPower(100);
+	}
+	brick.motor("M1").setPower(0);
+	brick.motor("M2").setPower(0);
+	brick.motor("M3").setPower(0);
+	brick.motor("M4").setPower(0);
+	v = -90;
+	rotate(90);
+	while (brick.sensor("A6").readRawData() < 1023){
+		brick.motor("M1").setPower(100);
+		brick.motor("M2").setPower(100);
+		brick.motor("M3").setPower(100);
+		brick.motor("M4").setPower(100);
+	}
+	brick.motor("M1").setPower(0);
+	brick.motor("M2").setPower(0);
+	brick.motor("M3").setPower(0);
+	brick.motor("M4").setPower(0);
+	script.wait(1000);
+	brick.motor("S1").setPower(80);
+	var mes = 4;
+	var x = 0;
+	while (x != 4){
+		if (gamepad.isPadPressed(1)) {
+			x = [gamepad.padX(0), gamepad.padY(0)][0];
+		}
+		script.sendMessage(mes);
+		script.wait(100);
+	}
+	mes = 7;
+	script.wait(1000);
+	while (x != 9){
+		if (gamepad.isPadPressed(1)){
+			x = [gamepad.padX(0), gamepad.padY(0)][0];
+		}
+		if (brick.keys().isPressed(KeysEnum.Down) == true){
+			 while (x != 7){
+				if (gamepad.isPadPressed(1)) {
+					x = [gamepad.padX(0), gamepad.padY(0)][0];
+				}
+				script.sendMessage(mes);
+				script.wait(100);
+			}
+		}
+	}
+	script.wait(1000);
+	brick.motor("S1").setPower(80);
+	t = script.time();
+	while (script.time() - t < 500){
+		brick.motor("M1").setPower(-100);
+		brick.motor("M2").setPower(-100);
+		brick.motor("M3").setPower(-100);
+		brick.motor("M4").setPower(-100);
+	}
+	brick.motor("M1").setPower(0);
+	brick.motor("M2").setPower(0);
+	brick.motor("M3").setPower(0);
+	brick.motor("M4").setPower(0);
+	v = 90;
+	rotate(90);
+	while (brick.sensor("A4").readRawData() < 1023 && brick.sensor("A5").readRawData() < 1023){
+		brick.motor("M1").setPower(-100);
+		brick.motor("M2").setPower(-100);
+		brick.motor("M3").setPower(-100);
+		brick.motor("M4").setPower(-100);
+	}
+	go_on_edge(20);
+	while (brick.sensor("A6").readRawData() < 1023){
+		brick.motor("M1").setPower(100);
+		brick.motor("M2").setPower(100);
+		brick.motor("M3").setPower(100);
+		brick.motor("M4").setPower(100);
+	}
+	brick.motor("M1").setPower(0);
+	brick.motor("M2").setPower(0);
+	brick.motor("M3").setPower(0);
+	brick.motor("M4").setPower(0);
+}
 
 var do_ = function(){
 	switch (lines) {
-		case "начни стирать\n":
-			go(2);
-			rotate(180);
-			var mes=1; 
-			script.sendMessage(mes);
-			script.wait(1000);
+		case "доска\n":
+			Helper();
 		break;
 		case "возьми\n":
 			mailbox.send(2,2);
 		break;
 		case "отдай\n":
 			mailbox.send(2,3);
+		break;
+		case "деньги\n":
+			mailbox.send(2,4)
 		break;
 		default:
 			pereb();
@@ -247,7 +341,7 @@ var second = function(){
 var main = function(){
 	x = script.random(1, 8);
 	brick.display().showImage('pict'+x+'.png');
-	mailbox.connect("10.23.47.30");
+	mailbox.connect("10.23.47.211");//камера
 	script.wait(1000);
 	while (true){
 		second();
