@@ -104,7 +104,6 @@ var main = function()
 	while (true){
 		print(brick.sensor("A4").readRawData());
 		go_on_edge(1000);
-		
 		script.wait(300);
 		v = -90;
 		go_on_edge(1000);
