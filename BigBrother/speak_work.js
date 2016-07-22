@@ -35,7 +35,7 @@ var go_on_edge = function(dist)
 			light = brick.sensor("A2").readRawData();
 		if (brick.sensor("A3").readRawData() < 200){
 			p_reg();
-		} else {
+		} else {
 			end = 1;
 			break;
 		}
@@ -146,105 +146,105 @@ function speak(){
 	script.wait(50);
 	return lines[0];
 }
-
-var Helper = function(){
-		while (brick.sensor("A4").readRawData() < 1023 && brick.sensor("A5").readRawData() < 1023){
-		brick.motor("M1").setPower(-100);
-		brick.motor("M2").setPower(-100);
-		brick.motor("M3").setPower(-100);
-		brick.motor("M4").setPower(-100);
-	}
-	v = -90;
-	go_on_edge(1000);
-	v = 90;
-	go_on_edge(5);
-	var t = script.time();
-	while (script.time() - t < 500){
-		brick.motor("M1").setPower(100);
-		brick.motor("M2").setPower(100);
-		brick.motor("M3").setPower(100);
-		brick.motor("M4").setPower(100);
-	}
-	brick.motor("M1").setPower(0);
-	brick.motor("M2").setPower(0);
-	brick.motor("M3").setPower(0);
-	brick.motor("M4").setPower(0);
-	v = -90;
-	rotate(90);
-	while (brick.sensor("A6").readRawData() < 1023){
-		brick.motor("M1").setPower(100);
-		brick.motor("M2").setPower(100);
-		brick.motor("M3").setPower(100);
-		brick.motor("M4").setPower(100);
-	}
-	brick.motor("M1").setPower(0);
-	brick.motor("M2").setPower(0);
-	brick.motor("M3").setPower(0);
-	brick.motor("M4").setPower(0);
-	script.wait(1000);
-	brick.motor("S1").setPower(80);
-	var mes = 4;
-	var x = 0;
-	while (x != 4){
-		if (gamepad.isPadPressed(1)) {
-			x = [gamepad.padX(0), gamepad.padY(0)][0];
-		}
-		script.sendMessage(mes);
-		script.wait(100);
-	}
-	mes = 7;
-	script.wait(1000);
-	while (x != 9){
-		if (gamepad.isPadPressed(1)){
-			x = [gamepad.padX(0), gamepad.padY(0)][0];
-		}
-		if (brick.keys().isPressed(KeysEnum.Down) == true){
-			 while (x != 7){
-				if (gamepad.isPadPressed(1)) {
-					x = [gamepad.padX(0), gamepad.padY(0)][0];
-				}
-				script.sendMessage(mes);
-				script.wait(100);
-			}
-		}
-	}
-	script.wait(1000);
-	brick.motor("S1").setPower(80);
-	t = script.time();
-	while (script.time() - t < 500){
-		brick.motor("M1").setPower(-100);
-		brick.motor("M2").setPower(-100);
-		brick.motor("M3").setPower(-100);
-		brick.motor("M4").setPower(-100);
-	}
-	brick.motor("M1").setPower(0);
-	brick.motor("M2").setPower(0);
-	brick.motor("M3").setPower(0);
-	brick.motor("M4").setPower(0);
-	v = 90;
-	rotate(90);
-	while (brick.sensor("A4").readRawData() < 1023 && brick.sensor("A5").readRawData() < 1023){
-		brick.motor("M1").setPower(-100);
-		brick.motor("M2").setPower(-100);
-		brick.motor("M3").setPower(-100);
-		brick.motor("M4").setPower(-100);
-	}
-	go_on_edge(20);
-	while (brick.sensor("A6").readRawData() < 1023){
-		brick.motor("M1").setPower(100);
-		brick.motor("M2").setPower(100);
-		brick.motor("M3").setPower(100);
-		brick.motor("M4").setPower(100);
-	}
-	brick.motor("M1").setPower(0);
-	brick.motor("M2").setPower(0);
-	brick.motor("M3").setPower(0);
-	brick.motor("M4").setPower(0);
-}
+
+var Helper = function(){
+		while (brick.sensor("A4").readRawData() < 1023 && brick.sensor("A5").readRawData() < 1023){
+		brick.motor("M1").setPower(-100);
+		brick.motor("M2").setPower(-100);
+		brick.motor("M3").setPower(-100);
+		brick.motor("M4").setPower(-100);
+	}
+	v = -90;
+	go_on_edge(1000);
+	v = 90;
+	go_on_edge(5);
+	var t = script.time();
+	while (script.time() - t < 500){
+		brick.motor("M1").setPower(100);
+		brick.motor("M2").setPower(100);
+		brick.motor("M3").setPower(100);
+		brick.motor("M4").setPower(100);
+	}
+	brick.motor("M1").setPower(0);
+	brick.motor("M2").setPower(0);
+	brick.motor("M3").setPower(0);
+	brick.motor("M4").setPower(0);
+	v = -90;
+	rotate(90);
+	while (brick.sensor("A6").readRawData() < 1023){
+		brick.motor("M1").setPower(100);
+		brick.motor("M2").setPower(100);
+		brick.motor("M3").setPower(100);
+		brick.motor("M4").setPower(100);
+	}
+	brick.motor("M1").setPower(0);
+	brick.motor("M2").setPower(0);
+	brick.motor("M3").setPower(0);
+	brick.motor("M4").setPower(0);
+	script.wait(1000);
+	brick.motor("S1").setPower(80);
+	var mes = 4;
+	var x = 0;
+	while (x != 4){
+		if (gamepad.isPadPressed(1)) {
+			x = [gamepad.padX(0), gamepad.padY(0)][0];
+		}
+		script.sendMessage(mes);
+		script.wait(100);
+	}
+	mes = 7;
+	script.wait(1000);
+	while (x != 9){
+		if (gamepad.isPadPressed(1)){
+			x = [gamepad.padX(0), gamepad.padY(0)][0];
+		}
+		if (brick.keys().isPressed(KeysEnum.Down) == true){
+			 while (x != 7){
+				if (gamepad.isPadPressed(1)) {
+					x = [gamepad.padX(0), gamepad.padY(0)][0];
+				}
+				script.sendMessage(mes);
+				script.wait(100);
+			}
+		}
+	}
+	script.wait(1000);
+	brick.motor("S1").setPower(80);
+	t = script.time();
+	while (script.time() - t < 500){
+		brick.motor("M1").setPower(-100);
+		brick.motor("M2").setPower(-100);
+		brick.motor("M3").setPower(-100);
+		brick.motor("M4").setPower(-100);
+	}
+	brick.motor("M1").setPower(0);
+	brick.motor("M2").setPower(0);
+	brick.motor("M3").setPower(0);
+	brick.motor("M4").setPower(0);
+	v = 90;
+	rotate(90);
+	while (brick.sensor("A4").readRawData() < 1023 && brick.sensor("A5").readRawData() < 1023){
+		brick.motor("M1").setPower(-100);
+		brick.motor("M2").setPower(-100);
+		brick.motor("M3").setPower(-100);
+		brick.motor("M4").setPower(-100);
+	}
+	go_on_edge(20);
+	while (brick.sensor("A6").readRawData() < 1023){
+		brick.motor("M1").setPower(100);
+		brick.motor("M2").setPower(100);
+		brick.motor("M3").setPower(100);
+		brick.motor("M4").setPower(100);
+	}
+	brick.motor("M1").setPower(0);
+	brick.motor("M2").setPower(0);
+	brick.motor("M3").setPower(0);
+	brick.motor("M4").setPower(0);
+}
 
 var do_ = function(){
 	switch (lines) {
-		case "доска\n":
+		case "доска\n":
 			Helper();
 		break;
 		case "возьми\n":
@@ -252,9 +252,6 @@ var do_ = function(){
 		break;
 		case "отдай\n":
 			mailbox.send(2,3);
-		break;
-		case "деньги\n":
-			mailbox.send(2,4)
 		break;
 		default:
 			pereb();
@@ -286,27 +283,27 @@ function say(text) {
 }
 
 var first = function(){
-	script.wait(1000);
-	while (brick.sensor("A4").readRawData() < 1023 && brick.sensor("A5").readRawData() < 1023){
-		brick.motor("M1").setPower(-100);
-		brick.motor("M2").setPower(-100);
-		brick.motor("M3").setPower(-100);
-		brick.motor("M4").setPower(-100);
+	script.wait(1000);
+	while (brick.sensor("A4").readRawData() < 1023 && brick.sensor("A5").readRawData() < 1023){
+		brick.motor("M1").setPower(-100);
+		brick.motor("M2").setPower(-100);
+		brick.motor("M3").setPower(-100);
+		brick.motor("M4").setPower(-100);
 	}
 	while (true){
-		print(brick.sensor("A4").readRawData());
-		go_on_edge(1000);
-		script.wait(300);
-		v = -90;
-		if (end == 1){
-			break;
-		}
-		go_on_edge(1000);
-		v = 90;
-		if (end == 1){
-			break;
+		print(brick.sensor("A4").readRawData());
+		go_on_edge(1000);
+		script.wait(300);
+		v = -90;
+		if (end == 1){
+			break;
 		}
-	}
+		go_on_edge(1000);
+		v = 90;
+		if (end == 1){
+			break;
+		}
+	}
 	end = 0;
 	brick.motor("M1").setPower(0);
 	brick.motor("M2").setPower(0);
@@ -315,16 +312,16 @@ var first = function(){
 }
 
 var second = function(){
-	script.wait(1000);
-	while (brick.sensor("A6").readRawData() < 1023){
-		brick.motor("M1").setPower(100);
-		brick.motor("M2").setPower(100);
-		brick.motor("M3").setPower(100);
-		brick.motor("M4").setPower(100);
-	}
-	brick.motor("M1").setPower(0);
-	brick.motor("M2").setPower(0);
-	brick.motor("M3").setPower(0);
+	script.wait(1000);
+	while (brick.sensor("A6").readRawData() < 1023){
+		brick.motor("M1").setPower(100);
+		brick.motor("M2").setPower(100);
+		brick.motor("M3").setPower(100);
+		brick.motor("M4").setPower(100);
+	}
+	brick.motor("M1").setPower(0);
+	brick.motor("M2").setPower(0);
+	brick.motor("M3").setPower(0);
 	brick.motor("M4").setPower(0);
 	while (brick.sensor("A3").readRawData() < 200){
 		if (brick.keys().isPressed(KeysEnum.Left) == true){
@@ -332,7 +329,8 @@ var second = function(){
 			do_();
 		}
 		if (brick.keys().isPressed(KeysEnum.Right) == true){
-			say("меня зовут робот старший брат");
+			say("меня зовут робот старший брат");
+			mailbox.send(2,4);
 		}
 		script.wait(100);
 	}
@@ -343,8 +341,8 @@ var main = function(){
 	brick.display().showImage('pict'+x+'.png');
 	mailbox.connect("10.23.47.211");//камера
 	script.wait(1000);
-	while (true){
-		second();
+	while (true){
+		second();
 		script.wait(1000);
 		first();
 		script.wait(1000);
