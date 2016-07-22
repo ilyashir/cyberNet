@@ -5,35 +5,35 @@ function toSm (dist){return dist*60/1024;}
 var camera;//Ugol povorota camery
 
 var manip = function(){
-	brick.encoder("E1").reset();
-	brick.encoder("E3").reset();
-	while(brick.encoder('E3').read()>=-750){
-		brick.motor('M3').setPower(-100);
-		script.wait(1);
-	}
-	brick.motor('M3').setPower(0);
-	while(brick.encoder('E1').read()<=45){
-		brick.motor('M1').setPower(100);
-		script.wait(1);
-	}
-	brick.motor('M1').setPower(0);
-	script.wait(1000);
-	brick.motor('M1').setPower(0);
-	brick.motor(S4).setPower(90);
-	script.wait(1000);
-	brick.motor(S4).setPower(-90);
-	script.wait(1000);
-	while(brick.encoder('E1').read()>=-25){
-		brick.motor('M1').setPower(-100);
-		script.wait(1);
-	}
-	brick.motor('M1').setPower(0);
-	script.wait(1000);
-	brick.motor('M1').setPower(0);
-	while(brick.sensor('A3').read()==0){
-		brick.motor('M3').setPower(100);
-		script.wait(1);
-	}
+	brick.encoder("E1").reset();
+	brick.encoder("E3").reset();
+	while(brick.encoder('E3').read()>=-750){
+		brick.motor('M3').setPower(-100);
+		script.wait(1);
+	}
+	brick.motor('M3').setPower(0);
+	while(brick.encoder('E1').read()<=45){
+		brick.motor('M1').setPower(100);
+		script.wait(1);
+	}
+	brick.motor('M1').setPower(0);
+	script.wait(1000);
+	brick.motor('M1').setPower(0);
+	brick.motor(S4).setPower(90);
+	script.wait(1000);
+	brick.motor(S4).setPower(-90);
+	script.wait(1000);
+	while(brick.encoder('E1').read()>=-25){
+		brick.motor('M1').setPower(-100);
+		script.wait(1);
+	}
+	brick.motor('M1').setPower(0);
+	script.wait(1000);
+	brick.motor('M1').setPower(0);
+	while(brick.sensor('A3').read()==0){
+		brick.motor('M3').setPower(100);
+		script.wait(1);
+	}
 }
 
 var setAng =function(osy,a){
@@ -66,6 +66,13 @@ var setAng =function(osy,a){
 		} 
 	}
 }
+
+var money = function(){
+	brick.encoder(E2).reset();
+	brick.motor(M2).setPower(100);
+	while(brick.encoder(E2).read()>-40) script.wait(1);
+	brick.motor(M2).setPower(0);
+}
 
 var mess = function(){
 	if (mailbox.hasMessages()){
@@ -75,20 +82,22 @@ var mess = function(){
 			brick.motor("M4").setPower(-100);
 		} else if (mes ==0) {
 			brick.motor("M4").setPower(0);
-		} else if(mes == 2 || mes == 3){
+		} else if(mes == 2 || mes == 3){
 			manip();
+		} else if (mes == 4){
+			money();
 		}
 	}
 
 var main = function(){
-	mailbox.connect("10.23.47.113");
+	mailbox.connect("10.23.47.237");//старший брат
 	//Timer
 	var time0=0, dt=0;
 	//Startovoe polozhenie
 	setAng(0,0);
 	//Ustanovka polozheniya camery
 	camera=0;
-	brick.motor(S6).setPower(camera);
+	//brick.motor(S6).setPower(camera);
 	//Ugly po osyam
 	var aLR=0,aUD=10;
 	while(true)
@@ -146,7 +155,7 @@ var main = function(){
 		//Izmenenie ugla camery po nazhatiyu knopky
 		if(brick.keys().isPressed(KeysEnum.Up) /*&& camera<20*/)camera++;
 		if(brick.keys().isPressed(KeysEnum.Down) /*&& camera>0*/)camera--;
-		brick.motor(S6).setPower(camera);
+		//brick.motor(S6).setPower(camera);
 		//Vyvod testovykh peremennykh
 		brick.display().addLabel(Lsm,10,10);
 		brick.display().addLabel(Rsm,10,25);
